@@ -216,7 +216,7 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     bool doConnect(QString ipAddress);
-    void getStatus();
+    void getStatus(QString);
     void saveStatus();
     void addRow();
     void addButtons(int );
@@ -258,9 +258,11 @@ private:
     QPushButton *btn_unRegister;
     QPushButton *btn_configure;
     QPushButton *btn_register;
+    QPushButton *btn_status;
     QHBoxLayout* pLayout;
     QString ipAddress;
     MyThread *thread;
+    QString old_host;
     //QDialog *regDialog;
     //RegisterDialogue *registerDialog;
     //DeviceWidget *device;

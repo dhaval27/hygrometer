@@ -29,6 +29,9 @@ MainWindow::MainWindow(QWidget *parent) :
         colNum_unRegister=9;
         ui->tableWidget->setColumnCount(10);
         ui->tableWidget->setHorizontalHeaderLabels(QString("DEVICE;IP ADDRESS;LOCATION;STATE;TEMP;HUMIDITY;;;;").split(";"));
+
+        //btn_status= new QPushButton("Status",ui->tableWidget);
+        //ui->tableWidget->setHorizontalHeaderItem(colNum_getStatus,new QTableWidgetItem(colNum_getStatus));
 #else
         colNum_state=3;
         colNum_getStatus=4;
@@ -425,17 +428,17 @@ void DeviceList::showDeviceList()
 
     while((this->iterator1) != (this->device.end()))
     {
-        qDebug()<<"device="<<(this->device[i].dev_id);
-        qDebug()<<"device_ip="<<(this->device[i].dev_ip);
-        qDebug()<<"device_subnet="<<(this->device[i].dev_subnet);
-        qDebug()<<"device_location="<<(this->device[i].dev_location);
-        qDebug()<<"device_temp="<<(this->device[i].dev_temp);
-        qDebug()<<"device_humidity="<<(this->device[i].dev_humidity);
-        qDebug()<<"device_state="<<(this->device[i].dev_state);
-        qDebug()<<"dev_temp_max="<<(this->device[i].dev_temp_max);
-        qDebug()<<"dev_temp_min="<<(this->device[i].dev_temp_min);
-        qDebug()<<"dev_humidity_max="<<(this->device[i].dev_humidity_max);
-        qDebug()<<"dev_humidity_max="<<(this->device[i].dev_humidity_max);
+        qDebug()<<"device           ="<<(this->device[i].dev_id);
+        qDebug()<<"device_ip        ="<<(this->device[i].dev_ip);
+        qDebug()<<"device_subnet    ="<<(this->device[i].dev_subnet);
+        qDebug()<<"device_location  ="<<(this->device[i].dev_location);
+        qDebug()<<"device_temp      ="<<(this->device[i].dev_temp);
+        qDebug()<<"device_humidity  ="<<(this->device[i].dev_humidity);
+        qDebug()<<"device_state     ="<<(this->device[i].dev_state);
+        qDebug()<<"dev_temp_max     ="<<(this->device[i].dev_temp_max);
+        qDebug()<<"dev_temp_min     ="<<(this->device[i].dev_temp_min);
+        qDebug()<<"dev_humidity_max ="<<(this->device[i].dev_humidity_max);
+        qDebug()<<"dev_humidity_max ="<<(this->device[i].dev_humidity_max);
 
         qDebug()<<"********";
         /*
@@ -459,7 +462,7 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::getStatus()
+void MainWindow::getStatus(QString host_address)
 {
     qDebug()<<"data in getStatus="<<data;
     status= data;
@@ -471,16 +474,22 @@ void MainWindow::getStatus()
     state= status.mid(status.lastIndexOf("#")+1);
     qDebug()<<"state="<<state;
 
-    if(state!=earlierState)
+    //qDebug()<<host_address;
+
+    qDebug()<<"old_host="<<old_host;
+    QString deviceId= ui->tableWidget->item(row_status,0)->text();
+    //if(state!=earlierState)
+    if((old_host!=host_address)||(state!=earlierState))
     {
         activity_text=ui->textEdit_2->toPlainText();
         qDebug()<<"activity_text="<<activity_text;
-        activity_text.append("Device 1 changed its status.\n");
+        activity_text.append(deviceId+=" changed its status.\n");
         activity_text.append(QTime::currentTime().toString("HH:mm:ss"));
         activity_text.append(", ");
         activity_text.append(QDate::currentDate().toString("dd MMM"));
         activity_text.append("\n");
         ui->textEdit_2->setText(activity_text);
+        old_host=host_address;
     }
 
     status= status.remove(status.indexOf("#STATE"),status.size());
@@ -502,11 +511,11 @@ void MainWindow::getStatus()
     saveStatus();
 
     ui->tableWidget->setItem(row_status,colNum_state,new QTableWidgetItem(state));
-    if(ui->tableWidget->columnCount()==10)
-    {
+
+#ifdef Hygrometer
         ui->tableWidget->setItem(row_status,colNum_temp,new QTableWidgetItem(temp));
         ui->tableWidget->setItem(row_status,colNum_humidity,new QTableWidgetItem(humidity));
-    }
+#endif
 }
 
 void MainWindow::saveStatus()
@@ -529,11 +538,13 @@ void MainWindow::saveStatus()
 void MainWindow::readData()
 {
     data= socket->readAll();
+    QString host_address=socket->peerAddress().toString();
+    qDebug()<<host_address;
 
     ui->textEdit->append(data);
     if(data.contains("###STATUS#"))
     {
-        getStatus();
+        getStatus(host_address);
     }
 }
 
@@ -593,8 +604,14 @@ bool MainWindow::doConnect(QString ipAddress)
         } else if(socket->state() == QAbstractSocket::ConnectingState ) {
             ui->textEdit->setPlainText("socket state Connecting\n");
         } else if(socket->state() == QAbstractSocket::ConnectedState ) {
-            socket->close();
-            //return true;
+            if(ipAddress==(socket->peerAddress().toString()))
+                return true;
+            else
+            {
+                socket->close();
+                socket = NULL;
+                //return true;
+            }
         } else if(socket->state() == QAbstractSocket::BoundState  ) {
             ui->textEdit->setPlainText("socket state BoundState \n");
         } else if(socket->state() == QAbstractSocket::ClosingState  ) {
@@ -1612,15 +1629,12 @@ void MainWindow::addButtons(int row)
     btn_settings= new QPushButton("Settings",ui->tableWidget);
     ui->tableWidget->setCellWidget(row,colNum_settings,btn_settings);
 
-    qDebug()<<"hi";
     if((ui->tableWidget->columnCount())==10)
     {
-        qDebug()<<"hello";
         btn_configure= new QPushButton("Configure",ui->tableWidget);
         ui->tableWidget->setCellWidget(row,colNum_configure,btn_configure);
         connect(btn_configure,SIGNAL(clicked()),this,SLOT(on_btn_configure_clicked()));
     }
-    qDebug()<<"world";
     btn_unRegister= new QPushButton("Remove",ui->tableWidget);
     ui->tableWidget->setCellWidget(row,colNum_unRegister,btn_unRegister);
 
@@ -1779,18 +1793,21 @@ void MainWindow::on_btn_configure_clicked()
     else
        return;
 
-    socket->write("#MAX_TEMP#");
-    socket->write(config->get_max_temp().toStdString().c_str());
-    socket->write("\n");
-    socket->write("#MIN_TEMP#");
-    socket->write(config->get_min_temp().toStdString().c_str());
-    socket->write("\n");
-    socket->write("#MAX_HUMIDITY#");
-    socket->write(config->get_max_humidity().toStdString().c_str());
-    socket->write("\n");
-    socket->write("#MIN_HUMIDITY#");
-    socket->write(config->get_min_humidity().toStdString().c_str());
-    socket->write("\n");
+    if(socket!=NULL)
+    {
+        socket->write("#MAX_TEMP#");
+        socket->write(config->get_max_temp().toStdString().c_str());
+        socket->write("\n");
+        socket->write("#MIN_TEMP#");
+        socket->write(config->get_min_temp().toStdString().c_str());
+        socket->write("\n");
+        socket->write("#MAX_HUMIDITY#");
+        socket->write(config->get_max_humidity().toStdString().c_str());
+        socket->write("\n");
+        socket->write("#MIN_HUMIDITY#");
+        socket->write(config->get_min_humidity().toStdString().c_str());
+        socket->write("\n");
+    }
 }
 
 void MainWindow::on_btn_settings_clicked()
@@ -1824,14 +1841,6 @@ void MainWindow::on_btn_settings_clicked()
     ipAddress  = ui->tableWidget->item(row,1)->text();
     qDebug()<<"ipAddress in settings="<<ipAddress;
     QString dev_id = ui->tableWidget->item(row,0)->text();
-    if(ipAddress.count('.')!=3)
-    {
-        qDebug()<<"count of '.'="<<ipAddress.count('.');
-        QErrorMessage *errorMessage= new QErrorMessage;
-        errorMessage->setWindowTitle("Error!");
-        errorMessage->showMessage("Please enter valid IPAddress first");
-        return;
-    }
 
     if(ipAddress == "") {
         ui->textEdit->setPlainText("Please fill IP address of device. \"look at lcd of device\" ");
@@ -1845,7 +1854,7 @@ void MainWindow::on_btn_settings_clicked()
 
         /********************************
         *********    TO DO    **********/
-#if 0
+#if 1
         deviceList->xmlDomUpdate(dev_id);
         deviceList->deviceListUpdate(dev_id);
         updateTable();
@@ -1858,7 +1867,7 @@ void MainWindow::on_btn_settings_clicked()
         ui->textEdit->setPlainText("Please fill IP address of device. \"look at lcd of device\" ");
         return;
     }
-    /*ret = doConnect(ipAddress);
+    ret = doConnect(ipAddress);
     if (ret == false) {
         ui->textEdit->setPlainText("Device not found in network.\"Please check your network connection\" ");
         return;
@@ -1866,14 +1875,17 @@ void MainWindow::on_btn_settings_clicked()
     else
     {
         ui->textEdit->setPlainText("Device is present in Network");
-    }*/
+    }
 
-    socket->write("#IP#");
-    socket->write(deviceList->newIpAddress.toStdString().c_str());
-    socket->write("\n");
-    socket->write("#SUBNET#");
-    socket->write(netInfo->get_subnet().toStdString().c_str());
-    socket->write("\n");
+    if(socket!=NULL)
+    {
+        socket->write("#IP#");
+        socket->write(deviceList->newIpAddress.toStdString().c_str());
+        socket->write("\n");
+        socket->write("#SUBNET#");
+        socket->write(netInfo->get_subnet().toStdString().c_str());
+        socket->write("\n");
+    }
 }
 
 void MainWindow::doIt()
