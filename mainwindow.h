@@ -32,6 +32,8 @@
 #include <QErrorMessage>
 #include <QDomElement>
 #include <vector>
+#include <QThread>
+
 
 namespace Ui {
 class MainWindow;
@@ -76,13 +78,16 @@ public:
     QDialogButtonBox *buttonBox;
 };
 
-class DeviceWidget
+
+
+class Device
 {
 public:
-    DeviceWidget(){}
+    Device()
+    {}
     //~DeviceWidget();
 
-    DeviceWidget(QString a)
+    Device(QString a)
     {
         dev_id=a;
     }
@@ -98,6 +103,34 @@ public:
     {
         dev_location=a;
     }
+    void setTemp(QString a)
+    {
+        dev_temp=a;
+    }
+    void setHumidity(QString a)
+    {
+        dev_humidity=a;
+    }
+    void setState(QString a)
+    {
+        dev_state=a;
+    }
+    void setTempMax(QString a)
+    {
+        dev_temp_max=a;
+    }
+    void setTempMin(QString a)
+    {
+        dev_temp_min=a;
+    }
+    void setHumidityMax(QString a)
+    {
+        dev_humidity_max=a;
+    }
+    void setHumidityMin(QString a)
+    {
+        dev_humidity_min=a;
+    }
 
     QString dev_id;
     QString dev_ip;
@@ -108,28 +141,72 @@ public:
     QString dev_state;
     QString dev_temp_min;
     QString dev_temp_max;
+    QString dev_humidity_min;
+    QString dev_humidity_max;
 };
 
 class DeviceList
 {
+
+
 public:
     DeviceList();
 
-    DeviceWidget *d1;
-    QVector<DeviceWidget> device;
-    QVector<DeviceWidget>::iterator iterator1;
+    Device *d1;
+    QVector<Device> device;
+    QVector<Device>::iterator iterator1;
     QString deviceTag;
     RegisterDialogue *registerDialog;
     void xmlDomDelete(QString);
     void xmlDomUpdate(QString);
     int xmlDomReader();
     void retriveElements(QDomElement,QString);
-    void deviceListUpdate();
+    void deviceListUpdate(QString);
     void deviceListDelete(QString);
     void showDeviceList();
+    void xmlDomUpdateStatus(QString,QVector<Device>::iterator);
+
+    void updateDevice(QString);
     //QVector<QString> v;
     //QVector<QString>::iterator iterator;
+
+    QString newIpAddress;
+    QString newSubnet;
+    QString max_temp;
+    QString min_temp;
+    QString max_humidity;
+    QString min_humidity;
+
 };
+
+class MyThread : public QThread
+{
+    Q_OBJECT
+private:
+    QTcpSocket *socket;
+    QString IpAddress;
+    QByteArray Data;
+    QString temp;
+    QString humidity;
+    QString state;
+    QString status;
+    QString earlierState;
+    DeviceList device_list;
+   // qintptr socketDescriptor;
+
+signals:
+    void error(QTcpSocket::SocketError socketerror);
+
+public slots:
+    void readyRead();
+    void disconnected();
+
+public:
+    explicit MyThread(QString ip, QObject *parent = 0);
+    void getStatus(QString);
+    void run();
+};
+
 
 class MainWindow : public QMainWindow
 {
@@ -141,10 +218,10 @@ public:
     bool doConnect(QString ipAddress);
     void getStatus();
     void saveStatus();
-    void openDilog();
     void addRow();
     void addButtons(int );
     void updateTable();
+
     //void xmlDomDelete(QString);
     //void xmlDomUpdate(QString);
     //int xmlDomReader();
@@ -159,9 +236,6 @@ public:
     //QVector<DeviceWidget> device;
     //QVector<DeviceWidget>::iterator iterator;
     ~MainWindow();
-
-protected:
-    friend class UnregisterDialogue;
 
 private:
 
@@ -182,9 +256,11 @@ private:
     QPushButton *btn_getStatus;
     QPushButton *btn_settings;
     QPushButton *btn_unRegister;
+    QPushButton *btn_configure;
     QPushButton *btn_register;
     QHBoxLayout* pLayout;
     QString ipAddress;
+    MyThread *thread;
     //QDialog *regDialog;
     //RegisterDialogue *registerDialog;
     //DeviceWidget *device;
@@ -196,6 +272,13 @@ private:
     int row_unRegister;
     int row_register;
     int time_interval;
+    int colNum_state;
+    int colNum_temp;
+    int colNum_humidity;
+    int colNum_getStatus;
+    int colNum_settings;
+    int colNum_configure;
+    int colNum_unRegister;
     char *p;
     struct st_status{
         char st_ip[16];
@@ -216,18 +299,14 @@ public slots:
     void writeData(qint64);
     void doIt();
     void accept1();
+    //void readyRead();
     //void RegisterDialogue::accept();
 
-//private slots:
-    //void on_Setting_clicked();
-    void on_getDeviceStatus_clicked();
-    void on_btn_register_clicked();
+private slots:
     void on_btn_getStatus_clicked();
     void on_btn_settings_clicked();
     void on_btn_unRegister_clicked();
-    //void on_pushButton_clicked();
-    void on_Register_clicked();
-    void on_Unregister_clicked();
+    void on_btn_configure_clicked();
     void on_add_device_clicked();
 };
 
@@ -259,33 +338,49 @@ private:
     QVBoxLayout *vbox;
     QHBoxLayout *ip_hbox;
     QHBoxLayout *subnet_hbox;
+
     QLabel* ipLabel;
     QLabel* subnetLabel;
+
     QLineEdit *ipEdit;
     QLineEdit *subnetEdit;
+
     QDialogButtonBox *buttonBox;
 };
 
-class UnregisterDialogue: public QDialog
+class ConfigureDialog :public QDialog
 {
     Q_OBJECT
-public:
-    explicit UnregisterDialogue(QWidget *parent);
 
-    ~UnregisterDialogue();
+public:
+     explicit ConfigureDialog(QWidget *parent);
+    ~ConfigureDialog();
+    QString get_max_temp();
+    QString get_min_temp();
+    QString get_max_humidity();
+    QString get_min_humidity();
 
 private slots:
     void accept();
     void reject();
-
 private:
     QVBoxLayout *vbox;
-    QHBoxLayout *ip_hbox;
-    QLabel* ip_Label;
-    QLineEdit *ip_Edit;
+    QHBoxLayout *max_temp_hbox;
+    QHBoxLayout *min_temp_hbox;
+    QHBoxLayout *max_humidity_hbox;
+    QHBoxLayout *min_humidity_hbox;
+
+    QLabel* max_temp_Label;
+    QLabel* min_temp_Label;
+    QLabel* max_humidity_Label;
+    QLabel* min_humidity_Label;
+
+    QLineEdit *max_temp_Edit;
+    QLineEdit *min_temp_Edit;
+    QLineEdit *max_humidity_Edit;
+    QLineEdit *min_humidity_Edit;
+
     QDialogButtonBox *buttonBox;
-    int row_count;
-    QString ip_del;
 };
 
 class MyXmlContentHandler :public QXmlDefaultHandler

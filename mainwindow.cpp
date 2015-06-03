@@ -3,24 +3,51 @@
 #include <QAbstractSocket>
 #include <iostream>
 
-QString file_name="C:\\Users\\dhaval\\Desktop\\data4.xml";
+#define Hygrometer
+
+//QString file_name="C:\\Users\\dhaval\\Desktop\\data4.xml";
+#define file_name "/home/dhaval27/dhaval/project/hygrometer/data4.xml"
 //bool flag=true;
 bool flag_update=true;
-static int deviceIndex=0;
+int deviceIndex=0;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
-{
+{    
     ui->setupUi(this);
 
-    ui->tableWidget->setHorizontalHeaderLabels(QString("REGISTER;DEVICE;IP ADDRESS;TEMP;HUMIDITY;STATE").split(";"));
+    //QMessageBox::StandardButton msgBox= QMessageBox::question(this,"Configure","Do You want to Display Temperature & Humidity ?",QMessageBox::Yes|QMessageBox::No);
+    //if(msgBox==QMessageBox::Yes)
+#ifdef Hygrometer
+        colNum_state=3;
+        colNum_temp=4;
+        colNum_humidity=5;
+        colNum_getStatus=6;
+        colNum_settings=7;
+        colNum_configure=8;
+        colNum_unRegister=9;
+        ui->tableWidget->setColumnCount(10);
+        ui->tableWidget->setHorizontalHeaderLabels(QString("DEVICE;IP ADDRESS;LOCATION;STATE;TEMP;HUMIDITY;;;;").split(";"));
+#else
+        colNum_state=3;
+        colNum_getStatus=4;
+        colNum_settings=5;
+        colNum_unRegister=6;
+        ui->tableWidget->setColumnCount(7);
+
+        ui->tableWidget->setHorizontalHeaderLabels(QString("DEVICE;IP ADDRESS;LOCATION;STATE; ; ;").split(";"));
+#endif
+    //ui->tableWidget->resizeColumnsToContents();
+
+    QHeaderView *header= ui->tableWidget->horizontalHeader();
+    header->setSectionResizeMode(QHeaderView::Stretch);
 
     socket = NULL;
 
     maxDevice=10;
 
-    time_interval=10000;
+    time_interval=15000;
     rowCount=ui->tableWidget->rowCount();
     qDebug()<<"rowCount earlier="<<rowCount;
 
@@ -35,6 +62,334 @@ MainWindow::MainWindow(QWidget *parent) :
     updateTable();
 }
 
+MyThread::MyThread(QString ipAddress, QObject *parent) :
+    QThread(parent)
+{
+    this->IpAddress = ipAddress;
+}
+
+void MyThread::run()
+{
+    // thread starts here
+    qDebug() << " Thread started";
+
+    socket = new QTcpSocket();
+    socket->connectToHost(IpAddress, 5099);
+
+    socket->waitForConnected(5000);
+    socket->write("#TELL STATUS\n");
+
+    // connect socket and signal
+    // note - Qt::DirectConnection is used because it's multithreaded
+    //        This makes the slot to be invoked immediately, when the signal is emitted.
+
+    connect(socket, SIGNAL(readyRead()), this, SLOT(readyRead()), Qt::DirectConnection);
+    connect(socket, SIGNAL(disconnected()), this, SLOT(disconnected()));
+
+    // We'll have multiple clients, we want to know which is which
+    qDebug() << IpAddress << " Client connected";
+
+    // make this thread a loop,
+    // thread will stay alive so that signal/slot to function properly
+    // not dropped out in the middle when thread dies
+
+    exec();
+}
+
+void MyThread::readyRead()
+{
+    // get the information
+    Data = socket->readAll();
+
+    // will write on server side window
+    qDebug() << IpAddress << " Data in: " << Data;
+
+    if(Data.contains("###STATUS"))
+    {
+        deviceIndex=0;
+        device_list.xmlDomReader();
+        this->getStatus(IpAddress);
+
+        //deviceIndex=0;
+        //device_list.xmlDomReader();
+        //device_list.showDeviceList();
+    }
+
+    //MainWindow::ui->tableWidget->setItem(0,4,new QTableWidgetItem("hello"));
+    //socket->write(Data);
+}
+
+void MyThread::disconnected()
+{
+    qDebug() << IpAddress << " Disconnected";
+    socket->deleteLater();
+
+    exit(0);
+}
+
+void MyThread::getStatus(QString IpAddress)
+{
+    qDebug()<<IpAddress <<" data in getStatus="<<Data;
+    status= Data;
+    qDebug()<<"status="<<status;
+    status= status.remove('\n');
+    qDebug()<<"status after remove \n="<<status;
+
+    earlierState= state;
+    state= status.mid(status.lastIndexOf("#")+1);
+    qDebug()<<"state="<<state;
+
+    /*if(state!=earlierState)
+    {
+        activity_text=ui->textEdit_2->toPlainText();
+        qDebug()<<"activity_text="<<activity_text;
+        activity_text.append("Device 1 changed its status.\n");
+        activity_text.append(QTime::currentTime().toString("HH:mm:ss"));
+        activity_text.append(", ");
+        activity_text.append(QDate::currentDate().toString("dd MMM"));
+        activity_text.append("\n");
+        ui->textEdit_2->setText(activity_text);
+    }*/
+
+    status= status.remove(status.indexOf("#STATE"),status.size());
+    qDebug()<<"status after removal of #STATE="<<status;
+
+    humidity= status.mid(status.lastIndexOf("#")+1);
+    qDebug()<<"humdity="<<humidity;
+
+    status= status.remove(status.indexOf("#HUMIDITY"),status.size());
+    qDebug()<<"status after removal of #HUMIDITY="<<status;
+
+    temp= status.mid(status.lastIndexOf("#")+1);
+    qDebug()<<"temp="<<temp;
+
+    qDebug()<<"device size="<<device_list.device.size();
+    qDebug()<<"deviceIndex="<<deviceIndex;
+    bool devicePresent= false;
+    device_list.iterator1= device_list.device.begin();
+
+    QString deviceID;
+    while((device_list.iterator1) != (device_list.device.end()))
+    {
+        if((device_list.iterator1->dev_ip)==IpAddress)
+        {
+            //qDebug()<<this->iterator1->dev_id;
+            devicePresent= true;
+            deviceID= device_list.iterator1->dev_id;
+            break;
+        }
+        (device_list.iterator1)++;
+    }
+
+    if(!devicePresent)
+    {
+        qDebug()<<"device Not Present";
+    }
+    else
+    {
+        qDebug()<<"device  Present";
+        device_list.iterator1->setTemp(temp);
+        device_list.iterator1->setHumidity(humidity);
+        device_list.iterator1->setState(state);
+    }
+    device_list.xmlDomUpdateStatus(deviceID,device_list.iterator1);
+    device_list.deviceListUpdate(deviceID);
+
+    //device_list.updateDevice(IpAddress);
+    //status= status.remove(status.indexOf("#TEMP"),status.size());
+    //qDebug()<<"status after removal of #STATE="<<status;
+}
+
+void DeviceList::xmlDomUpdateStatus(QString deviceTag,QVector<Device>::iterator iterator)
+{
+    QDomDocument document;
+    QFile file(file_name);
+    bool exist= file.exists();
+    qDebug()<<"exist while writting="<<exist;
+    int size= file.size();
+    qDebug()<<"size="<<size;
+
+    if(!file.open(QIODevice::ReadWrite|QIODevice::Text))
+    {
+        QMessageBox::warning(0,"Error!","Error In opening File");
+        return;
+    }
+    else
+    {
+        if(exist)
+        {
+            if(!document.setContent(&file))
+            {
+                qDebug()<<"failed to load the file";
+                return;
+            }
+            file.close();
+        }
+    }
+
+    QDomElement root;
+    if(exist)
+    {
+        //if("Devices"==document.documentElement().tagName())
+        {
+            qDebug()<<"file exist n "<<document.documentElement().tagName();
+            root = document.firstChildElement();
+            qDebug()<<"root="<<root.tagName();
+
+        }
+    }
+    else
+    {
+        qDebug()<<"file doesn't exist ";
+        return;
+    }
+
+    //get the list;
+    //traverse to particular node or child
+    //action(add/delete/insertion)
+    QDomNode node = root.firstChild();
+    QDomNode parentNode = node.parentNode();
+    qDebug()<<"N NODE=    "<<node.nodeName()<<"   P NODE="<<parentNode.nodeName();
+
+    QDomElement newElement= document.createElement(deviceTag);
+
+    //root.appendChild(newElement);
+
+    /*****************if only Parent node is present*************/
+    if(node.isNull())
+    {
+        qDebug()<<"root is null";
+        newElement.setAttribute("IP",registerDialog->ip_Edit->text());
+        newElement.setAttribute("Subnet",registerDialog->subnet_Edit->text());
+        newElement.setAttribute("Location",registerDialog->location_Edit->text());
+
+        root.appendChild(newElement);
+        qDebug()<<"N NODE=    "<<node.nodeName()<<"   P NODE="<<parentNode.nodeName();
+
+        qDebug() << "UPDATE= " <<document.toString();
+
+        file.close();
+
+        #if 1
+        QFile file1(file_name);
+        if(!file1.open(QIODevice::WriteOnly))
+        {
+            QMessageBox::warning(0,"Error!","Error In opening File4");
+        }
+        else
+        {
+            QTextStream stream(&file1);
+            stream<<document.toString();
+            file1.close();
+            qDebug()<<"Writing is done";
+        }
+        return;
+        #endif
+    }
+
+    bool devicePresent=false;
+#if 1
+    QDomElement ele,ele_temp;
+    while(!node.isNull())
+    {
+        if (node.isElement())
+        {
+            ele = node.toElement();
+            qDebug() << "Element name: " << ele.tagName();
+            if(newElement.tagName()==ele.tagName())
+            {
+                qDebug()<<"device already present";
+                devicePresent=true;
+                ele_temp=ele;
+            }
+            qDebug() << "nodeName="<<node.nodeName()<<"  nodeValue="<<node.nodeValue();
+        }
+        node= node.nextSibling();
+    }
+#endif
+
+    qDebug()<<"N NODE=    "<<node.nodeName()<<"   P NODE="<<parentNode.nodeName();
+
+    if(!devicePresent)
+    {
+        qDebug()<<"device not present";
+        return;
+    }
+    else
+    {
+        qDebug()<<"in else";
+        ele_temp.setAttribute("Temp",iterator->dev_temp);
+        ele_temp.setAttribute("Humidity",iterator->dev_humidity);
+        ele_temp.setAttribute("State",iterator->dev_state);
+        /*QMessageBox::StandardButton msgBox= QMessageBox::question(this,"Warning!","Device already present.\n Do you really want to replace it?",QMessageBox::Yes|QMessageBox::No);
+        if(msgBox==QMessageBox::Yes)
+        {
+            parentNode.replaceChild(newElement,ele_temp);
+            qDebug()<<"newElement replaced";
+        }
+        else
+        {
+            qDebug()<<"newElement NOT replaced";
+            return;
+        }*/
+    }
+
+    qDebug()<<"N NODE=    "<<node.nodeName()<<"   P NODE="<<parentNode.nodeName();
+
+    qDebug() << "UPDATE= " <<document.toString();
+
+    file.close();
+
+#if 1
+
+    QFile file1(file_name);
+    if(!file1.open(QIODevice::WriteOnly))
+    {
+        QMessageBox::warning(0,"Error!","Error In opening File4");
+    }
+    else
+    {
+        QTextStream stream(&file1);
+        stream<<document.toString();
+        file1.close();
+        qDebug()<<"Writing is done";
+    }
+#endif
+}
+
+void DeviceList::updateDevice(QString IpAddress)
+{
+    qDebug()<<"in updateDevice";
+    qDebug()<<this->device.size();
+    qDebug()<<IpAddress;
+    qDebug()<<deviceIndex;
+    bool devicePresent= false;
+    this->iterator1= this->device.begin();
+
+    while((this->iterator1) != (this->device.end()))
+    {
+        if((this->iterator1->dev_ip)==IpAddress)
+        {
+            //qDebug()<<this->iterator1->dev_id;
+            devicePresent= true;
+            break;
+        }
+        (this->iterator1)++;
+    }
+
+    if(!devicePresent)
+    {
+        qDebug()<<"device Not Present";
+    }
+    else
+    {
+        qDebug()<<"device  Present";
+        this->iterator1->setTemp(this->max_temp);
+        this->iterator1->setHumidity(this->max_temp);
+        this->iterator1->setState(this->min_temp);
+    }
+    showDeviceList();
+}
 
 void MainWindow::updateTable()
 {
@@ -52,8 +407,9 @@ void MainWindow::updateTable()
         qDebug()<<"device_location="<<(this->device[i].dev_location);
         qDebug()<<"********";
 #endif
-        ui->tableWidget->setItem(i,1,new QTableWidgetItem(deviceList->device[i].dev_id));
-        ui->tableWidget->setItem(i,2,new QTableWidgetItem(deviceList->device[i].dev_ip));
+        ui->tableWidget->setItem(i,0,new QTableWidgetItem(deviceList->device[i].dev_id));
+        ui->tableWidget->setItem(i,1,new QTableWidgetItem(deviceList->device[i].dev_ip));
+        ui->tableWidget->setItem(i,2,new QTableWidgetItem(deviceList->device[i].dev_location));
         i++;
         (deviceList->iterator1)++;
     }
@@ -73,6 +429,14 @@ void DeviceList::showDeviceList()
         qDebug()<<"device_ip="<<(this->device[i].dev_ip);
         qDebug()<<"device_subnet="<<(this->device[i].dev_subnet);
         qDebug()<<"device_location="<<(this->device[i].dev_location);
+        qDebug()<<"device_temp="<<(this->device[i].dev_temp);
+        qDebug()<<"device_humidity="<<(this->device[i].dev_humidity);
+        qDebug()<<"device_state="<<(this->device[i].dev_state);
+        qDebug()<<"dev_temp_max="<<(this->device[i].dev_temp_max);
+        qDebug()<<"dev_temp_min="<<(this->device[i].dev_temp_min);
+        qDebug()<<"dev_humidity_max="<<(this->device[i].dev_humidity_max);
+        qDebug()<<"dev_humidity_max="<<(this->device[i].dev_humidity_max);
+
         qDebug()<<"********";
         /*
         if(flag_update==true)
@@ -80,39 +444,15 @@ void DeviceList::showDeviceList()
             ui->tableWidget->setItem(i,1,new QTableWidgetItem(deviceList->device[i].dev_id));
             ui->tableWidget->setItem(i,2,new QTableWidgetItem(deviceList->device[i].dev_ip));
         }
-        i++;*/
+        */
         (this->iterator1)++;
+        i++;
     }
     //flag_update=false;
 }
 
 DeviceList::DeviceList()
-{
-    //d1= new DeviceWidget("hi");
-    //iterator= device.begin();
-    //device.push_back(DeviceWidget("hi !"));
-
-    //iterator1 = device.begin();
-    //device.push_back(DeviceWidget());
-    //qDebug()<<"device[0]"<<device[0].dev_id;
-
-
-    /*qDebug()<<"size="<<v.size();
-    int i;
-    iterator= v.begin();
-    for(i=0;i<5;i++)
-    {
-        v.push_front(QString("v %1").arg(i));
-        qDebug()<<"v[i]="<<v[i];
-    }
-    qDebug()<<"size="<<v.size();
-
-    for(i=0;i<v.size();i++)
-    {
-        //v.push_front(QString("v %1").arg(i));
-        qDebug()<<"v[i]="<<v[i];
-    }*/
-}
+{}
 
 MainWindow::~MainWindow()
 {
@@ -161,13 +501,12 @@ void MainWindow::getStatus()
     //p= malloc(sizeof(st_status));
     saveStatus();
 
-    ui->temprature->setText(temp);
-    ui->humidity->setText(humidity);
-    ui->state->setText(state);
-
-    ui->tableWidget->setItem(row_status,3,new QTableWidgetItem(temp));
-    ui->tableWidget->setItem(row_status,4,new QTableWidgetItem(humidity));
-    ui->tableWidget->setItem(row_status,5,new QTableWidgetItem(state));
+    ui->tableWidget->setItem(row_status,colNum_state,new QTableWidgetItem(state));
+    if(ui->tableWidget->columnCount()==10)
+    {
+        ui->tableWidget->setItem(row_status,colNum_temp,new QTableWidgetItem(temp));
+        ui->tableWidget->setItem(row_status,colNum_humidity,new QTableWidgetItem(humidity));
+    }
 }
 
 void MainWindow::saveStatus()
@@ -177,7 +516,6 @@ void MainWindow::saveStatus()
     memset(s1,0,sizeof(s1));
 
     //p= (char *)malloc(sizeof(st_status));
-    strcpy(s1[0].st_ip,ui->ip_address->text().toStdString().c_str());
     strcpy(s1[0].st_temp,temp.toStdString().c_str());
     strcpy(s1[0].st_humidity,humidity.toStdString().c_str());
     strcpy(s1[0].st_state,state.toStdString().c_str());
@@ -212,13 +550,13 @@ void MainWindow::writeData(qint64 data)
 
 void MainWindow::newConnection()
 {
-    socket= server->nextPendingConnection();
+    /*socket= server->nextPendingConnection();
     qDebug()<<"socket started";
 
     //connect(socket,SIGNAL(bytesWritten(qint64)),this,SLOT(writeData(qint64)));
     connect(socket,SIGNAL(readyRead()),this,SLOT(readData()));
     socket->write("Hello Client\n");
-    socket->flush();
+    socket->flush();*/
 }
 
 void MainWindow::starts()
@@ -241,10 +579,11 @@ void MainWindow::readAllStdOut()
     qDebug()<<"data="<<data;
 }
 
+
 bool MainWindow::doConnect(QString ipAddress)
 {
     bool ret = false;
-
+    qDebug()<<"in doConnect...";
     if(socket) {
         if(socket->state() == QAbstractSocket::UnconnectedState) {
             socket->close();
@@ -254,7 +593,8 @@ bool MainWindow::doConnect(QString ipAddress)
         } else if(socket->state() == QAbstractSocket::ConnectingState ) {
             ui->textEdit->setPlainText("socket state Connecting\n");
         } else if(socket->state() == QAbstractSocket::ConnectedState ) {
-            return true;
+            socket->close();
+            //return true;
         } else if(socket->state() == QAbstractSocket::BoundState  ) {
             ui->textEdit->setPlainText("socket state BoundState \n");
         } else if(socket->state() == QAbstractSocket::ClosingState  ) {
@@ -272,15 +612,7 @@ bool MainWindow::doConnect(QString ipAddress)
     connect(socket,SIGNAL(readyRead()),this,SLOT(readData()));
     connect(socket,SIGNAL(disconnected()),this,SLOT(closeConnection()) );
     return true;
-}
 
-void MainWindow::openDilog()
-{
-    QDialog *dialog= new QDialog;
-    dialog->setWindowTitle("Register Device");
-
-    //TODO add line edit add level add buttom ok
-    dialog->exec();
 }
 
 RegisterDialogue::RegisterDialogue(QWidget *parent): QDialog(parent)
@@ -303,8 +635,8 @@ RegisterDialogue::RegisterDialogue(QWidget *parent): QDialog(parent)
     subnet_Label->setText("Subnet Mask:");
     location_Label->setText("Location:");
 
-    ip_Edit = new QLineEdit();
-    subnet_Edit = new QLineEdit();
+    ip_Edit = new IPLineEdit(this);
+    subnet_Edit = new IPLineEdit(this);
     location_Edit = new QLineEdit();
 
     ip_Edit->setFixedWidth(150);
@@ -350,26 +682,58 @@ void MainWindow::accept1()
     }
     addRow();
 
-    ui->tableWidget->setItem(((ui->tableWidget->rowCount())-1),1,new QTableWidgetItem(deviceList->deviceTag));
-    ui->tableWidget->setItem(((ui->tableWidget->rowCount())-1),2,new QTableWidgetItem(deviceList->registerDialog->ip_Edit->text()));
+    ui->tableWidget->setItem(((ui->tableWidget->rowCount())-1),0,new QTableWidgetItem(deviceList->deviceTag));
+    ui->tableWidget->setItem(((ui->tableWidget->rowCount())-1),1,new QTableWidgetItem(deviceList->registerDialog->ip_Edit->text()));
+    ui->tableWidget->setItem(((ui->tableWidget->rowCount())-1),2,new QTableWidgetItem(deviceList->registerDialog->location_Edit->text()));
 
+    //deviceList->xmlDomReader();
     deviceList->xmlDomUpdate(deviceList->deviceTag);
-    deviceList->deviceListUpdate();
+    deviceList->deviceListUpdate(deviceList->deviceTag);
     deviceList->showDeviceList();
 }
 
-void DeviceList::deviceListUpdate()
+void DeviceList::deviceListUpdate(QString deviceTag)
 {
     qDebug()<<"in deviceListUpdate";
+    showDeviceList();
     qDebug()<<this->device.size();
     qDebug()<<deviceTag;
-    qDebug()<<deviceIndex;
+    qDebug()<<(deviceIndex=this->device.size());
+    bool devicePresent= false;
+    this->iterator1= this->device.begin();
 
-    this->device.push_back(DeviceWidget(deviceTag));
-    this->device[deviceIndex].setIP(this->registerDialog->ip_Edit->text());
-    this->device[deviceIndex].setSubnet(this->registerDialog->subnet_Edit->text());
-    this->device[deviceIndex].setLocation(this->registerDialog->location_Edit->text());
-    deviceIndex++;
+    while((this->iterator1) != (this->device.end()))
+    {
+        if((this->iterator1->dev_id)==deviceTag)
+        {
+            //qDebug()<<this->iterator1->dev_id;
+            devicePresent= true;
+            break;
+        }
+        (this->iterator1)++;
+    }
+
+    if(!devicePresent)
+    {
+        qDebug()<<"device Not Present";
+        this->device.push_back(Device(deviceTag));
+        this->device[deviceIndex].setIP(this->registerDialog->ip_Edit->text());
+        this->device[deviceIndex].setSubnet(this->registerDialog->subnet_Edit->text());
+        this->device[deviceIndex].setLocation(this->registerDialog->location_Edit->text());
+        deviceIndex++;
+    }
+    else
+    {
+        qDebug()<<"device already Present";
+        this->iterator1->setIP(this->newIpAddress);
+        this->iterator1->setSubnet(this->newSubnet);
+        this->iterator1->setTempMax(this->max_temp);
+        this->iterator1->setTempMin(this->min_temp);
+        this->iterator1->setHumidityMax(this->max_humidity);
+        this->iterator1->setHumidityMin(this->min_humidity);
+        deviceIndex++;
+    }
+    showDeviceList();
 }
 
 void DeviceList::deviceListDelete(QString deviceTag)
@@ -382,7 +746,6 @@ void DeviceList::deviceListDelete(QString deviceTag)
     this->iterator1= this->device.begin();
     while((this->iterator1)!=(this->device.end()))
     {
-
         if((this->iterator1->dev_id)==deviceTag)
         {
             qDebug()<<"in if ";
@@ -393,7 +756,6 @@ void DeviceList::deviceListDelete(QString deviceTag)
         }
         (this->iterator1)++;
     }
-
 }
 
 void RegisterDialogue::registerInFile()
@@ -583,6 +945,10 @@ int DeviceList::xmlDomReader()
     int child;
     qDebug()<<"parent node="<<document.documentElement().tagName();
     qDebug()<<"no. of child="<<(child=document.documentElement().childNodes().count());
+    if(child==0)
+    {
+        return child;
+    }
     QDomElement root = document.firstChildElement();
     QDomNode n = root.firstChild();
 
@@ -618,7 +984,8 @@ void DeviceList::retriveElements(QDomElement root, QString tag)
             QDomElement e = elm.toElement();
             //deviceList->device.push_back(DeviceWidget());
 
-            this->device.push_back(DeviceWidget(tag));
+
+            this->device.push_back(Device(tag));
 
             /*if(flag==true)
             {
@@ -663,6 +1030,63 @@ void DeviceList::retriveElements(QDomElement root, QString tag)
                     qDebug()<<"location in retreive="<<this->device[deviceIndex].dev_location;
                     //ui->tableWidget->setItem(,2,new QTableWidgetItem(e.attribute(attribute)));
                 }
+                if(attribute == "Max_Temp")
+                {
+                    //if((deviceList->iterator1->dev_id)==tag)
+                    //    deviceList->iterator1->setLocation(e.attribute(attribute));
+                    this->device[deviceIndex].setTempMax(e.attribute(attribute));
+                    qDebug()<<"max_temp in retreive="<<this->device[deviceIndex].dev_temp_max;
+                    //ui->tableWidget->setItem(,2,new QTableWidgetItem(e.attribute(attribute)));
+                }
+                if(attribute == "Min_Temp")
+                {
+                    //if((deviceList->iterator1->dev_id)==tag)
+                    //    deviceList->iterator1->setLocation(e.attribute(attribute));
+                    this->device[deviceIndex].setTempMin(e.attribute(attribute));
+                    qDebug()<<"min_temp in retreive="<<this->device[deviceIndex].dev_temp_min;
+                    //ui->tableWidget->setItem(,2,new QTableWidgetItem(e.attribute(attribute)));
+                }
+                if(attribute == "Max_Humidity")
+                {
+                    this->device[deviceIndex].setHumidityMax(e.attribute(attribute));
+                    qDebug()<<"max_humidity in retreive="<<this->device[deviceIndex].dev_humidity_max;
+                    //ui->tableWidget->setItem(,2,new QTableWidgetItem(e.attribute(attribute)));
+                }
+                if(attribute == "Min_Humidity")
+                {
+                    //if((deviceList->iterator1->dev_id)==tag)
+                    //    deviceList->iterator1->setLocation(e.attribute(attribute));
+                    this->device[deviceIndex].setHumidityMin(e.attribute(attribute));
+                    qDebug()<<"mai_Humidity in retreive="<<this->device[deviceIndex].dev_humidity_min;
+                    //ui->tableWidget->setItem(,2,new QTableWidgetItem(e.attribute(attribute)));
+                }
+                /*if(attribute == "Temp")
+                {
+                    qDebug()<<"in Temp";
+                    //if((deviceList->iterator1->dev_id)==tag)
+                    //    deviceList->iterator1->setLocation(e.attribute(attribute));
+                    this->device[deviceIndex].setTemp(e.attribute(attribute));
+                    qDebug()<<"temp in retreive="<<this->device[deviceIndex].dev_temp;
+                    //ui->tableWidget->setItem(,2,new QTableWidgetItem(e.attribute(attribute)));
+                }
+                if(attribute == "Humidity")
+                {
+                    qDebug()<<"in Humidity";
+                    //if((deviceList->iterator1->dev_id)==tag)
+                    //    deviceList->iterator1->setLocation(e.attribute(attribute));
+                    this->device[deviceIndex].setHumidity(e.attribute(attribute));
+                    qDebug()<<"humidity in retreive="<<this->device[deviceIndex].dev_humidity;
+                    //ui->tableWidget->setItem(,2,new QTableWidgetItem(e.attribute(attribute)));
+                }
+                if(attribute == "State")
+                {
+                    qDebug()<<"in State";
+                    //if((deviceList->iterator1->dev_id)==tag)
+                    //    deviceList->iterator1->setLocation(e.attribute(attribute));
+                    this->device[deviceIndex].setState(e.attribute(attribute));
+                    qDebug()<<"state in retreive="<<this->device[deviceIndex].dev_state;
+                    //ui->tableWidget->setItem(,2,new QTableWidgetItem(e.attribute(attribute)));
+                }*/
                 //(deviceList->iterator1)++;
 
                 //qDebug()<<"subnet="<<e.attribute(subnet);
@@ -721,6 +1145,9 @@ void DeviceList::xmlDomUpdate(QString deviceTag)
         newElement.setAttribute("IP",registerDialog->ip_Edit->text());
         newElement.setAttribute("Subnet",registerDialog->subnet_Edit->text());
         newElement.setAttribute("Location",registerDialog->location_Edit->text());
+        newElement.setAttribute("Temp","0");
+        newElement.setAttribute("Humidity","0");
+        newElement.setAttribute("State","0");
         root.appendChild(newElement);
 
             QTextStream stream(&file);
@@ -739,15 +1166,20 @@ void DeviceList::xmlDomUpdate(QString deviceTag)
     qDebug()<<"N NODE=    "<<node.nodeName()<<"   P NODE="<<parentNode.nodeName();
 
     QDomElement newElement= document.createElement(deviceTag);
-    newElement.setAttribute("IP",registerDialog->ip_Edit->text());
-    newElement.setAttribute("Subnet",registerDialog->subnet_Edit->text());
-    newElement.setAttribute("Location",registerDialog->location_Edit->text());
+
     //root.appendChild(newElement);
 
     /*****************if only Parent node is present*************/
     if(node.isNull())
     {
         qDebug()<<"root is null";
+        newElement.setAttribute("IP",registerDialog->ip_Edit->text());
+        newElement.setAttribute("Subnet",registerDialog->subnet_Edit->text());
+        newElement.setAttribute("Location",registerDialog->location_Edit->text());
+        newElement.setAttribute("Temp","0");
+        newElement.setAttribute("Humidity","0");
+        newElement.setAttribute("State","0");
+
         root.appendChild(newElement);
         qDebug()<<"N NODE=    "<<node.nodeName()<<"   P NODE="<<parentNode.nodeName();
 
@@ -797,11 +1229,25 @@ void DeviceList::xmlDomUpdate(QString deviceTag)
 
     if(!devicePresent)
     {
+        newElement.setAttribute("IP",registerDialog->ip_Edit->text());
+        newElement.setAttribute("Subnet",registerDialog->subnet_Edit->text());
+        newElement.setAttribute("Location",registerDialog->location_Edit->text());
+        newElement.setAttribute("Temp","0");
+        newElement.setAttribute("Humidity","0");
+        newElement.setAttribute("State","0");
+
         parentNode.insertAfter(newElement,parentNode.lastChildElement());
         qDebug()<<"newElement inserted";
     }
     else
     {
+        qDebug()<<"in else";
+        ele_temp.setAttribute("IP",this->newIpAddress);
+        ele_temp.setAttribute("Subnet",this->newSubnet);
+        ele_temp.setAttribute("Max_Temp",this->max_temp);
+        ele_temp.setAttribute("Min_Temp",this->min_temp);
+        ele_temp.setAttribute("Max_Humidity",this->max_humidity);
+        ele_temp.setAttribute("Min_Humidity",this->min_humidity);
         /*QMessageBox::StandardButton msgBox= QMessageBox::question(this,"Warning!","Device already present.\n Do you really want to replace it?",QMessageBox::Yes|QMessageBox::No);
         if(msgBox==QMessageBox::Yes)
         {
@@ -952,10 +1398,10 @@ IPSubnetDialogue::IPSubnetDialogue(QWidget *parent): QDialog(parent)
     subnetLabel = new QLabel;
     ipEdit = new IPLineEdit(this);
     subnetEdit = new IPLineEdit(this);
+
     buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok|QDialogButtonBox::Cancel);
 
     ipLabel->setText("IpAddress");
-
     subnetLabel->setText("Subnet Mask");
 
     ip_hbox->addWidget(ipLabel);
@@ -969,9 +1415,61 @@ IPSubnetDialogue::IPSubnetDialogue(QWidget *parent): QDialog(parent)
 
     vbox->addLayout(ip_hbox);
     vbox->addLayout(subnet_hbox);
+
     vbox->addWidget(buttonBox);
 
     this->setWindowTitle("Ip/Subnet");
+}
+
+ConfigureDialog::ConfigureDialog(QWidget *parent): QDialog(parent)
+{
+    vbox        = new QVBoxLayout(this);
+
+    max_temp_hbox     = new QHBoxLayout();
+    min_temp_hbox = new QHBoxLayout();
+    max_temp_Label = new QLabel;
+    min_temp_Label = new QLabel;
+    max_temp_Edit = new IPLineEdit(this);
+    min_temp_Edit = new IPLineEdit(this);
+
+    max_humidity_hbox     = new QHBoxLayout();
+    min_humidity_hbox = new QHBoxLayout();
+    max_humidity_Label = new QLabel;
+    min_humidity_Label = new QLabel;
+    max_humidity_Edit = new IPLineEdit(this);
+    min_humidity_Edit = new IPLineEdit(this);
+
+    buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok|QDialogButtonBox::Cancel);
+
+    max_temp_Label->setText("Max.Temp");
+    min_temp_Label->setText("Min.Temp");
+    max_humidity_Label->setText("IpAddress");
+    min_humidity_Label->setText("Subnet Mask");
+
+
+    max_temp_hbox->addWidget(max_temp_Label);
+    max_temp_hbox->addWidget(max_temp_Edit);
+
+    min_temp_hbox->addWidget(min_temp_Label);
+    min_temp_hbox->addWidget(min_temp_Edit);
+
+    max_humidity_hbox->addWidget(max_humidity_Label);
+    max_humidity_hbox->addWidget(max_humidity_Edit);
+
+    min_humidity_hbox->addWidget(min_humidity_Label);
+    min_humidity_hbox->addWidget(min_humidity_Edit);
+
+    connect(buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
+    connect(buttonBox, SIGNAL(rejected()), this, SLOT(reject()));
+
+    vbox->addLayout(max_temp_hbox);
+    vbox->addLayout(min_temp_hbox);
+    vbox->addLayout(max_humidity_hbox);
+    vbox->addLayout(min_humidity_hbox);
+
+    vbox->addWidget(buttonBox);
+
+    this->setWindowTitle("Configure Temp & Humidity");
 }
 
 IPSubnetDialogue::~IPSubnetDialogue()
@@ -990,6 +1488,31 @@ void IPSubnetDialogue::accept()
 }
 
 void IPSubnetDialogue::reject()
+{
+    //this->setResult(QDialog::Rejected);
+    this->done(QDialog::Rejected);
+    this->close();
+    this->hide();
+}
+
+ConfigureDialog::~ConfigureDialog()
+{
+    delete vbox;
+    delete max_temp_hbox;
+    delete min_temp_hbox;
+    delete max_humidity_hbox;
+    delete min_humidity_hbox;
+}
+
+void ConfigureDialog::accept()
+{
+    //this->setResult(QDialog::Accepted);
+    this->done(QDialog::Accepted);
+    this->close();
+    this->hide();
+}
+
+void ConfigureDialog::reject()
 {
     //this->setResult(QDialog::Rejected);
     this->done(QDialog::Rejected);
@@ -1023,38 +1546,29 @@ QString IPSubnetDialogue::get_ipaddress()
 QString IPSubnetDialogue::get_subnet()
 {
     return this->subnetEdit->text();
-
 }
-
-void MainWindow::on_getDeviceStatus_clicked()
+QString ConfigureDialog::get_max_temp()
 {
-    QString ipAddress  = ui->tableWidget->item(0,2)->text();
-    bool ret = false;
-    qint64 wrote;
-    ret = doConnect(ipAddress);
-    if (ret == false) {
-        qDebug()<<"ret==false";
-        ui->textEdit->setPlainText("Device not found in network.\"Please check your network connection\" ");
-        return;
-    }
-    wrote = socket->write("#TELL STATUS\n");
-    if (wrote == -1) {
-        ui->textEdit->setPlainText("Connection Lost from device");
-        ui->textEdit->append(socket->errorString().toStdString().c_str());
-    }
+    return this->max_temp_Edit->text();
 }
-
-void MainWindow::on_Register_clicked()
+QString ConfigureDialog::get_min_temp()
 {
-    //RegisterDialogue *reg= new RegisterDialogue(this);
-    //reg->exec();
-
+    return this->min_temp_Edit->text();
+}
+QString ConfigureDialog::get_max_humidity()
+{
+    return this->max_humidity_Edit->text();
+}
+QString ConfigureDialog::get_min_humidity()
+{
+    return this->min_humidity_Edit->text();
 }
 
 void MainWindow::addRow()
 {
     rowCount= ui->tableWidget->rowCount();
     qDebug()<<"rowCount="<<rowCount;
+
     ui->tableWidget->insertRow(rowCount);
 
     //static int i=rowCount+1;
@@ -1065,9 +1579,9 @@ void MainWindow::addRow()
     addButtons(rowCount);
 }
 
-void MainWindow::addButtons(int i)
+void MainWindow::addButtons(int row)
 {
-    qDebug()<<"i in addButtons="<<i;
+    qDebug()<<"i in addButtons="<<row;
     /*pWidget = new QWidget();
     pLayout = new QHBoxLayout(pWidget);
     btn_getStatus = new myButton(pWidget);
@@ -1089,54 +1603,34 @@ void MainWindow::addButtons(int i)
     ui->tableWidget->setCellWidget(i, 6, qWidget);
     */
 
-    btn_register= new QPushButton("Register",ui->tableWidget);
-    ui->tableWidget->setCellWidget(i,0,btn_register);
+    //btn_register= new QPushButton("Register",ui->tableWidget);
+    //ui->tableWidget->setCellWidget(i,0,btn_register);
 
     btn_getStatus= new QPushButton("Get Status",ui->tableWidget);
-    ui->tableWidget->setCellWidget(i,6,btn_getStatus);
+    ui->tableWidget->setCellWidget(row,colNum_getStatus,btn_getStatus);
 
     btn_settings= new QPushButton("Settings",ui->tableWidget);
-    ui->tableWidget->setCellWidget(i,7,btn_settings);
+    ui->tableWidget->setCellWidget(row,colNum_settings,btn_settings);
 
-    ui->tableWidget->setColumnWidth(8,30);
-    btn_unRegister= new QPushButton("X",ui->tableWidget);
-    ui->tableWidget->setCellWidget(i,8,btn_unRegister);
+    qDebug()<<"hi";
+    if((ui->tableWidget->columnCount())==10)
+    {
+        qDebug()<<"hello";
+        btn_configure= new QPushButton("Configure",ui->tableWidget);
+        ui->tableWidget->setCellWidget(row,colNum_configure,btn_configure);
+        connect(btn_configure,SIGNAL(clicked()),this,SLOT(on_btn_configure_clicked()));
+    }
+    qDebug()<<"world";
+    btn_unRegister= new QPushButton("Remove",ui->tableWidget);
+    ui->tableWidget->setCellWidget(row,colNum_unRegister,btn_unRegister);
 
-    connect(btn_register,SIGNAL(clicked()),this,SLOT(on_btn_register_clicked()));
+    //connect(btn_register,SIGNAL(clicked()),this,SLOT(on_btn_register_clicked()));
     connect(btn_getStatus,SIGNAL(clicked()),this,SLOT(on_btn_getStatus_clicked()));
     connect(btn_settings,SIGNAL(clicked()),this,SLOT(on_btn_settings_clicked()));
+
     connect(btn_unRegister,SIGNAL(clicked()),this,SLOT(on_btn_unRegister_clicked()));
     //connect(btn_getStatus,SIGNAL(clicked(int i)),this,SLOT(on_myButton_clicked(int i)));
 
-}
-
-void MainWindow::on_btn_register_clicked()
-{
-    qDebug()<<"btn_register_clicked";
-
-    /*int row_count= ui->tableWidget->rowCount();
-    qDebug()<<" in register row_count="<<row_count;
-    qDebug()<<"cellWidget="<<ui->tableWidget->cellWidget(0,0);
-
-    for(row_register=0; row_register<row_count; row_register++)
-    {
-          //if(sender() == but1(row,col)){
-        qDebug()<<"row="<<row_register;
-        qDebug()<<ui->tableWidget->cellWidget(row_register,0);
-        if(sender() == ui->tableWidget->cellWidget(row_register,0))
-        {
-            qDebug() << row_register << sender();
-            break;
-        }
-    }
-
-    QString deviceTag= ui->tableWidget->item(row_register,1)->text();
-    qDebug()<<"deviceTag in register slot="<<deviceTag;
-    qDebug()<<"sender="<<sender();
-
-    registerDialog= new RegisterDialogue(this);
-    registerDialog->exec();
-    */
 }
 
 void MainWindow::on_btn_unRegister_clicked()
@@ -1145,14 +1639,14 @@ void MainWindow::on_btn_unRegister_clicked()
 
     int row_count= ui->tableWidget->rowCount();
     qDebug()<<" in unRegister row_count="<<row_count;
-    qDebug()<<"cellWidget="<<ui->tableWidget->cellWidget(0,8);
+    qDebug()<<"cellWidget="<<ui->tableWidget->cellWidget(0,colNum_unRegister);
 
     for(row_unRegister=0; row_unRegister<row_count; row_unRegister++)
     {
           //if(sender() == but1(row,col)){
         qDebug()<<"row="<<row_unRegister;
-        qDebug()<<ui->tableWidget->cellWidget(row_unRegister,8);
-        if(sender() == ui->tableWidget->cellWidget(row_unRegister,8))
+        qDebug()<<ui->tableWidget->cellWidget(row_unRegister,colNum_unRegister);
+        if(sender() == ui->tableWidget->cellWidget(row_unRegister,colNum_unRegister))
         {
             qDebug() << row_unRegister << sender();
             break;
@@ -1163,7 +1657,7 @@ void MainWindow::on_btn_unRegister_clicked()
     if(msgBox==QMessageBox::Yes)
     {
         qDebug()<<"sender="<<sender();
-        QString deviceTag= ui->tableWidget->item(row_unRegister,1)->text();
+        QString deviceTag= ui->tableWidget->item(row_unRegister,0)->text();
         deviceList->deviceListDelete(deviceTag);
         deviceList->showDeviceList();
         deviceList->xmlDomDelete(deviceTag);
@@ -1183,13 +1677,13 @@ void MainWindow::on_btn_getStatus_clicked()
 
     int row_count= ui->tableWidget->rowCount();
     qDebug()<<"row_count="<<row_count;
-    qDebug()<<"cellWidget="<<ui->tableWidget->cellWidget(0,6);
+    qDebug()<<"cellWidget="<<ui->tableWidget->cellWidget(0,colNum_getStatus);
 
     for(row_status=0; row_status<row_count; row_status++)
     {
           //if(sender() == but1(row,col)){
         qDebug()<<"row="<<row_status;
-            if(sender() == ui->tableWidget->cellWidget(row_status,6))
+            if(sender() == ui->tableWidget->cellWidget(row_status,colNum_getStatus))
             {
                 qDebug() << row_status << sender();
                 break;
@@ -1199,7 +1693,7 @@ void MainWindow::on_btn_getStatus_clicked()
     qDebug()<<"sender="<<sender();
     //qDebug()<<"position="<<btn_getStatus->pos();
 
-    ipAddress  = ui->tableWidget->item(row_status,2)->text();
+    ipAddress  = ui->tableWidget->item(row_status,1)->text();
     qDebug()<<"ipAddress="<<ipAddress;
     if(ipAddress.count('.')!=3)
     {
@@ -1210,6 +1704,13 @@ void MainWindow::on_btn_getStatus_clicked()
         return;
     }
 
+#if 0
+    thread= new MyThread(ipAddress,this);
+    connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
+    thread->start();
+#endif
+
+#if 1
     bool ret = false;
     qint64 wrote;
     ret = doConnect(ipAddress);
@@ -1233,27 +1734,84 @@ void MainWindow::on_btn_getStatus_clicked()
         ui->textEdit->setPlainText("Connection Lost from device");
         ui->textEdit->append(socket->errorString().toStdString().c_str());
     }
+#endif
 
+}
+
+
+void MainWindow::on_btn_configure_clicked()
+{
+    qDebug()<<"on_btn_configure_clicked";
+    ConfigureDialog *config= new ConfigureDialog(this);
+
+    bool ret= false;
+    QString ipAddress;
+    int row_count= ui->tableWidget->rowCount();
+    qDebug()<<"row_count="<<row_count;
+    qDebug()<<"cellWidget="<<ui->tableWidget->cellWidget(0,colNum_configure);
+
+    int row;
+    for(row=0; row<row_count; row++)
+    {
+        qDebug()<<"row="<<row;
+        if(sender() == ui->tableWidget->cellWidget(row,colNum_configure))
+        {
+            qDebug() << row << sender();
+            break;
+        }
+    }
+    qDebug()<<"sender="<<sender();
+
+    QString dev_id = ui->tableWidget->item(row,0)->text();
+    ipAddress= ui->tableWidget->item(row,1)->text();
+    qDebug()<<"ipAddress in settings="<<ipAddress;
+
+    ret =  config->exec();
+    if(ret == QDialog::Accepted){
+        qDebug()<<"dialog accepted";
+        deviceList->max_temp= config->get_max_temp();
+        deviceList->min_temp= config->get_min_temp();
+        deviceList->max_humidity= config->get_max_humidity();
+        deviceList->min_humidity= config->get_min_humidity();
+        deviceList->xmlDomUpdate(dev_id);
+        deviceList->deviceListUpdate(dev_id);
+    }
+    else
+       return;
+
+    socket->write("#MAX_TEMP#");
+    socket->write(config->get_max_temp().toStdString().c_str());
+    socket->write("\n");
+    socket->write("#MIN_TEMP#");
+    socket->write(config->get_min_temp().toStdString().c_str());
+    socket->write("\n");
+    socket->write("#MAX_HUMIDITY#");
+    socket->write(config->get_max_humidity().toStdString().c_str());
+    socket->write("\n");
+    socket->write("#MIN_HUMIDITY#");
+    socket->write(config->get_min_humidity().toStdString().c_str());
+    socket->write("\n");
 }
 
 void MainWindow::on_btn_settings_clicked()
 {
+    qDebug()<<"on_btn_settings_clicked";
     bool ret = false;
     QString ipAddress;
-    QString newIpAddress = "";
-    QString newSubnet = "";
+    //QString newIpAddress = "";
+    //QString newSubnet = "";
     IPSubnetDialogue *netInfo = new IPSubnetDialogue(this);
 
     int row_count= ui->tableWidget->rowCount();
     qDebug()<<"row_count="<<row_count;
-    qDebug()<<"cellWidget="<<ui->tableWidget->cellWidget(0,7);
+    qDebug()<<"cellWidget="<<ui->tableWidget->cellWidget(0,colNum_settings);
 
     int row;
     for(row=0; row<row_count; row++)
     {
           //if(sender() == but1(row,col)){
         qDebug()<<"row="<<row;
-            if(sender() == ui->tableWidget->cellWidget(row,7))
+            if(sender() == ui->tableWidget->cellWidget(row,colNum_settings))
             {
                 qDebug() << row << sender();
                 break;
@@ -1263,8 +1821,9 @@ void MainWindow::on_btn_settings_clicked()
     qDebug()<<"sender="<<sender();
     //qDebug()<<"position="<<btn_getStatus->pos();
 
-    ipAddress  = ui->tableWidget->item(row,2)->text();
+    ipAddress  = ui->tableWidget->item(row,1)->text();
     qDebug()<<"ipAddress in settings="<<ipAddress;
+    QString dev_id = ui->tableWidget->item(row,0)->text();
     if(ipAddress.count('.')!=3)
     {
         qDebug()<<"count of '.'="<<ipAddress.count('.');
@@ -1280,17 +1839,26 @@ void MainWindow::on_btn_settings_clicked()
     }
     ret =  netInfo->exec();
     if(ret == QDialog::Accepted) {
-        newIpAddress = netInfo->get_ipaddress();
-        newSubnet = netInfo->get_subnet();
+        deviceList->newIpAddress = netInfo->get_ipaddress();
+        deviceList->newSubnet = netInfo->get_subnet();
+        //deviceList->xmlDomReader();
+
+        /********************************
+        *********    TO DO    **********/
+#if 0
+        deviceList->xmlDomUpdate(dev_id);
+        deviceList->deviceListUpdate(dev_id);
+        updateTable();
+#endif
     }
     else
        return;
 
-    if(newIpAddress == "") {
+    if(deviceList->newIpAddress == "") {
         ui->textEdit->setPlainText("Please fill IP address of device. \"look at lcd of device\" ");
         return;
     }
-    ret = doConnect(ipAddress);
+    /*ret = doConnect(ipAddress);
     if (ret == false) {
         ui->textEdit->setPlainText("Device not found in network.\"Please check your network connection\" ");
         return;
@@ -1298,98 +1866,27 @@ void MainWindow::on_btn_settings_clicked()
     else
     {
         ui->textEdit->setPlainText("Device is present in Network");
-    }
+    }*/
 
-    socket->write("#IP:");
-    socket->write(newIpAddress.toStdString().c_str());
-    socket->write("#SUBNET:");
-    socket->write(newSubnet.toStdString().c_str());
+    socket->write("#IP#");
+    socket->write(deviceList->newIpAddress.toStdString().c_str());
+    socket->write("\n");
+    socket->write("#SUBNET#");
+    socket->write(netInfo->get_subnet().toStdString().c_str());
+    socket->write("\n");
 }
 
 void MainWindow::doIt()
 {
-    qint64 wrote= socket->write("#TELL STATUS\n");
+    /*qint64 wrote= socket->write("#TELL STATUS\n");
     if (wrote == -1)
     {
         ui->textEdit->setPlainText("Connection Lost from device");
         ui->textEdit->append(socket->errorString().toStdString().c_str());
-    }
-}
-
-/*void MainWindow::on_btn_settings_clicked()
-{
-    qDebug()<<"settings button slot";
-}*/
-
-void MainWindow::on_Unregister_clicked()
-{
-    qDebug()<<"unregister button slot";
-
-    UnregisterDialogue *unRegister= new UnregisterDialogue(this);
-    unRegister->exec();
-}
-
-UnregisterDialogue:: UnregisterDialogue(QWidget *parent):QDialog(parent)
-{
-    vbox= new QVBoxLayout(this);
-    ip_hbox= new QHBoxLayout();
-    ip_Label= new QLabel();
-    ip_Edit= new QLineEdit();
-    buttonBox= new QDialogButtonBox(QDialogButtonBox::Ok|QDialogButtonBox::Cancel);
-
-    connect(buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
-    connect(buttonBox, SIGNAL(rejected()), this, SLOT(reject()));
-
-    ip_Label->setText("IP address:");
-
-    ip_hbox->addWidget(ip_Label);
-    ip_hbox->addWidget(ip_Edit);
-    vbox->addLayout(ip_hbox);
-    vbox->addWidget(buttonBox);
-
-    this->setWindowTitle("Unregister Device");
-}
-
-void UnregisterDialogue::accept()
-{
-    //this->setResult(QDialog::Accepted);
-
-    /*int rowNum;
-    //row_count=2;
-    row_count= ui->tableWidget->rowCount();
-    //qDebug()<<"row_count="<<row_count;
-
-    ip_del= ip_Edit->text();
-    qDebug()<<"ip_del="<<ip_del;
-
-    for(rowNum=0; rowNum<row_count; rowNum++)
-    {
-        if((ui->tableWidget->item(rowNum,1)->text())==ip_del)
-        {
-            ui->tableWidget->removeRow(rowNum);
-        }
     }*/
-
-    this->done(QDialog::Accepted);
-    this->close();
-    this->hide();
 }
 
-void UnregisterDialogue::reject()
-{
-    //this->setResult(QDialog::Rejected);
-    this->done(QDialog::Rejected);
-    this->close();
-    this->hide();
-}
 
-UnregisterDialogue::~UnregisterDialogue()
-{
-    delete vbox;
-    delete ip_hbox;
-    delete ip_Edit;
-    delete ip_Label;
-}
 
 void MainWindow::on_add_device_clicked()
 {
@@ -1408,5 +1905,4 @@ void MainWindow::on_add_device_clicked()
         }
     }
 }
-
 
