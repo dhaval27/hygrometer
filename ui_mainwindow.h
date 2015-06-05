@@ -21,10 +21,10 @@
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QSpacerItem>
 #include <QtWidgets/QStatusBar>
-#include <QtWidgets/QTableWidget>
 #include <QtWidgets/QTextEdit>
 #include <QtWidgets/QToolBar>
 #include <QtWidgets/QWidget>
+#include "devicelist.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -33,7 +33,7 @@ class Ui_MainWindow
 public:
     QWidget *centralWidget;
     QGridLayout *gridLayout;
-    QTableWidget *tableWidget;
+    DeviceList *devicelist;
     QLabel *label_2;
     QTextEdit *textEdit_2;
     QHBoxLayout *horizontalLayout;
@@ -57,26 +57,26 @@ public:
         gridLayout->setSpacing(6);
         gridLayout->setContentsMargins(11, 11, 11, 11);
         gridLayout->setObjectName(QStringLiteral("gridLayout"));
-        tableWidget = new QTableWidget(centralWidget);
-        if (tableWidget->columnCount() < 7)
-            tableWidget->setColumnCount(7);
-        tableWidget->setObjectName(QStringLiteral("tableWidget"));
+        devicelist = new DeviceList(centralWidget);
+        if (devicelist->columnCount() < 3)
+            devicelist->setColumnCount(3);
+        devicelist->setObjectName(QStringLiteral("devicelist"));
         QFont font1;
         font1.setPointSize(8);
-        tableWidget->setFont(font1);
-        tableWidget->setMouseTracking(true);
-        tableWidget->setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
-        tableWidget->setRowCount(0);
-        tableWidget->setColumnCount(7);
-        tableWidget->horizontalHeader()->setCascadingSectionResizes(false);
-        tableWidget->horizontalHeader()->setDefaultSectionSize(75);
-        tableWidget->horizontalHeader()->setHighlightSections(false);
-        tableWidget->horizontalHeader()->setMinimumSectionSize(37);
-        tableWidget->horizontalHeader()->setProperty("showSortIndicator", QVariant(false));
-        tableWidget->horizontalHeader()->setStretchLastSection(false);
-        tableWidget->verticalHeader()->setVisible(false);
+        devicelist->setFont(font1);
+        devicelist->setMouseTracking(true);
+        devicelist->setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
+        devicelist->setRowCount(0);
+        devicelist->setColumnCount(3);
+        devicelist->horizontalHeader()->setCascadingSectionResizes(false);
+        devicelist->horizontalHeader()->setDefaultSectionSize(75);
+        devicelist->horizontalHeader()->setHighlightSections(false);
+        devicelist->horizontalHeader()->setMinimumSectionSize(37);
+        devicelist->horizontalHeader()->setProperty("showSortIndicator", QVariant(false));
+        devicelist->horizontalHeader()->setStretchLastSection(false);
+        devicelist->verticalHeader()->setVisible(false);
 
-        gridLayout->addWidget(tableWidget, 1, 0, 1, 2);
+        gridLayout->addWidget(devicelist, 1, 0, 1, 2);
 
         label_2 = new QLabel(centralWidget);
         label_2->setObjectName(QStringLiteral("label_2"));

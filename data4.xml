@@ -1,4 +1,4 @@
 <Devices>
- <Device2 Min_Temp="1" Subnet="1" Temp="40" IP="1" Max_Temp="1" State="OFFFFF" Min_Humidity="1" Humidity="100" Max_Humidity="1" Location="PUNE"/>
- <Device3 Subnet="123.22.22.22" Temp="0" IP="127.0.0.1" State="0" Humidity="0" Location="pune"/>
+ <Device Subnet="" IP="127.0.0.1" Location="pune" State="0" id="0" Temp="0" Humidity="0"/>
+ <Device Subnet="" IP="127.0.0.1" Location="pune" State="0" id="1" Temp="0" Humidity="0"/>
 </Devices>

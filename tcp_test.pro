@@ -18,8 +18,12 @@ TEMPLATE = app
 CONFIG+= static
 
 SOURCES += main.cpp\
-        mainwindow.cpp
+        mainwindow.cpp \
+    device.cpp \
+    devicelist.cpp
 
-HEADERS  += mainwindow.h
+HEADERS  += mainwindow.h \
+    device.h \
+    devicelist.h
 
 FORMS    += mainwindow.ui

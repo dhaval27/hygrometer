@@ -21,7 +21,7 @@
   <widget class="QWidget" name="centralWidget">
    <layout class="QGridLayout" name="gridLayout">
     <item row="1" column="0" colspan="2">
-     <widget class="QTableWidget" name="tableWidget">
+     <widget class="DeviceList" name="devicelist">
       <property name="font">
        <font>
         <pointsize>8</pointsize>
@@ -37,7 +37,7 @@
        <number>0</number>
       </property>
       <property name="columnCount">
-       <number>7</number>
+       <number>3</number>
       </property>
       <attribute name="horizontalHeaderCascadingSectionResizes">
        <bool>false</bool>
@@ -60,10 +60,6 @@
       <attribute name="verticalHeaderVisible">
        <bool>false</bool>
       </attribute>
-      <column/>
-      <column/>
-      <column/>
-      <column/>
       <column/>
       <column/>
       <column/>
@@ -157,6 +153,13 @@ p, li { white-space: pre-wrap; }
   <widget class="QStatusBar" name="statusBar"/>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>DeviceList</class>
+   <extends>QTableWidget</extends>
+   <header>devicelist.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
