@@ -92,7 +92,7 @@ class Device:public QObject
 {
     Q_OBJECT
 public:
-
+    ~Device();
     void initDevice(QObject *parent, int device_id = -1);
     void setIP(QString a)
     {
@@ -135,8 +135,6 @@ public:
         dev_humidity_min=a;
     }
 
-    void get_status();
-
     int dev_id;
     QString dev_ip;
     QString dev_subnet;
@@ -148,6 +146,7 @@ public:
     QString dev_temp_max;
     QString dev_humidity_min;
     QString dev_humidity_max;
+    QString dev_earlierState;
     QString newIpAddress;
     QString newSubnet;
     QPushButton *btn_getStatus;

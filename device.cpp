@@ -4,6 +4,12 @@
 #include <qhostaddress.h>
 #include <qmessagebox.h>
 #include <qerrormessage.h>
+#include "devicelist.h"
+
+Device::~Device()
+{
+
+}
 
 void Device::initDevice(QObject *parent, int device_id)
 {
@@ -12,41 +18,14 @@ void Device::initDevice(QObject *parent, int device_id)
     btn_getStatus= new QPushButton("Get Status",NULL);
     btn_settings= new QPushButton("Settings",NULL);
     btn_unRegister= new QPushButton("Remove",NULL);
-    btn_configure= new QPushButton("Configure",NULL);
 
     connect(btn_getStatus,SIGNAL(clicked()),this,SLOT(on_btn_getStatus_clicked()));
     connect(btn_settings,SIGNAL(clicked()),this,SLOT(on_btn_settings_clicked()));
     connect(btn_unRegister,SIGNAL(clicked()),this,SLOT(on_btn_unRegister_clicked()));
+#ifdef HYGROMETER
+    btn_configure= new QPushButton("Configure",NULL);
     connect(btn_configure,SIGNAL(clicked()),this,SLOT(on_btn_configure_clicked()));
-
-}
-
-void Device::get_status()
-{
-    bool ret = false;
-    qint64 wrote;
-    ret = doConnect(dev_ip);
-
-    if (ret == false)
-    {
-        //ui->textEdit->setPlainText("Device not found in network.\"Please check your network connection\" ");
-        return;
-    }
-    else
-    {
-//        ui->textEdit->setPlainText("Device is present in Network");
-//        timer= new QTimer(this);
-//        timer->setInterval(time_interval);
-//        timer->start();
-//        connect(timer,SIGNAL(timeout()),this,SLOT(doIt()));
-    }
-    wrote = socket->write("#TELL STATUS\n");
-    if (wrote == -1)
-    {
-//        ui->textEdit->setPlainText("Connection Lost from device");
-//        ui->textEdit->append(socket->errorString().toStdString().c_str());
-    }
-
+#endif
 }
 
 bool Device::doConnect(QString ipAddress)
@@ -121,26 +100,9 @@ void Device::closeConnection()
     socket = NULL;
 }
 
-void Device::on_btn_unRegister_clicked()
-{
-
-    qDebug()<<"btn_unRegister_clicked";
-    qDebug()<<"id"<<this->dev_id;
-
-    QMessageBox::StandardButton msgBox= QMessageBox::question(NULL,"Warning !","Do you really want to delete this device?",QMessageBox::Yes|QMessageBox::No);
-    if(msgBox==QMessageBox::Yes)
-    {
-        emit delete_me(this->dev_id);
-    }
-    else
-    {
-        qDebug()<<"Did not deleted";
-    }
-}
 
 void Device::on_btn_getStatus_clicked()
 {
-
     qDebug()<<"btn_getStatus_clicked";
     bool ret=false;
 
@@ -159,9 +121,53 @@ void Device::on_btn_getStatus_clicked()
     connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
     thread->start();
 #endif
-
 }
 
+void Device::on_btn_settings_clicked()
+{
+    qDebug()<<"on_btn_settings_clicked";
+    bool ret = false;
+
+    //emit update_me(this->dev_id);
+    netInfo = new IPSubnetDialogue(NULL);
+    ret =  netInfo->exec();
+
+    if(ret == QDialog::Accepted)
+    {
+        this->newIpAddress= netInfo->get_ipaddress();
+        this->newSubnet   = netInfo->get_subnet();
+
+        if(socket!=NULL)
+        {
+            socket->write("#IP#");
+            socket->write(this->newIpAddress.toStdString().c_str());
+            socket->write("\n");
+            socket->write("#SUBNET#");
+            socket->write(this->newSubnet.toStdString().c_str());
+            socket->write("\n");
+        }
+//        this->device[device_id].dev_ip      = netInfo->get_ipaddress();
+//        this->device[device_id].dev_subnet  = netInfo->get_subnet();
+//        xmlDomUpdate(device_id);
+    }
+#if 0
+    if(deviceList->newIpAddress == "") {
+        ui->textEdit->setPlainText("Please fill IP address of device. \"look at lcd of device\" ");
+        return;
+    }
+    ret = doConnect(ipAddress);
+    if (ret == false) {
+        ui->textEdit->setPlainText("Device not found in network.\"Please check your network connection\" ");
+        return;
+    }
+    else
+    {
+        ui->textEdit->setPlainText("Device is present in Network");
+    }
+
+
+#endif
+}
 
 void Device::on_btn_configure_clicked()
 {
@@ -197,56 +203,24 @@ void Device::on_btn_configure_clicked()
         }
     }
 }
-
-
-void Device::on_btn_settings_clicked()
+void Device::on_btn_unRegister_clicked()
 {
-    qDebug()<<"on_btn_settings_clicked";
-    bool ret = false;
 
-    //emit update_me(this->dev_id);
-    netInfo = new IPSubnetDialogue(NULL);
-    ret =  netInfo->exec();
+    qDebug()<<"btn_unRegister_clicked";
+    qDebug()<<"id"<<this->dev_id;
 
-    if(ret == QDialog::Accepted)
+    QMessageBox::StandardButton msgBox= QMessageBox::question(NULL,"Warning !","Do you really want to delete this device?",QMessageBox::Yes|QMessageBox::No);
+    if(msgBox==QMessageBox::Yes)
     {
-        this->newIpAddress= netInfo->get_ipaddress();
-        this->newSubnet   = netInfo->get_subnet();
-
-        if(socket!=NULL)
-        {
-            socket->write("#IP#");
-            socket->write(this->newIpAddress.toStdString().c_str());
-            socket->write("\n");
-            socket->write("#SUBNET#");
-            socket->write(this->newSubnet.toStdString().c_str());
-            socket->write("\n");
-        }
-//        this->device[device_id].dev_ip      = netInfo->get_ipaddress();
-//        this->device[device_id].dev_subnet  = netInfo->get_subnet();
-//        xmlDomUpdate(device_id);
-    }
-
-
-
-#if 0
-    if(deviceList->newIpAddress == "") {
-        ui->textEdit->setPlainText("Please fill IP address of device. \"look at lcd of device\" ");
-        return;
-    }
-    ret = doConnect(ipAddress);
-    if (ret == false) {
-        ui->textEdit->setPlainText("Device not found in network.\"Please check your network connection\" ");
-        return;
+        emit delete_me(this->dev_id);
     }
     else
     {
-        ui->textEdit->setPlainText("Device is present in Network");
+        qDebug()<<"Did not deleted";
     }
-
-
-#endif
 }
+
+
 
 
 
@@ -289,6 +263,11 @@ IPSubnetDialogue::~IPSubnetDialogue()
     delete vbox;
     delete ip_hbox;
     delete subnet_hbox;
+    delete ipLabel;
+    delete subnetLabel;
+    delete ipEdit;
+    delete subnetEdit;
+    delete buttonBox;
 }
 
 void IPSubnetDialogue::accept()
@@ -366,6 +345,16 @@ ConfigureDialog::~ConfigureDialog()
     delete min_temp_hbox;
     delete max_humidity_hbox;
     delete min_humidity_hbox;
+    delete max_temp_Label;
+    delete min_temp_Label;
+    delete max_humidity_Label;
+    delete min_humidity_Label;
+    delete max_temp_Edit;
+    delete min_temp_Edit;
+    delete max_humidity_Edit;
+    delete min_humidity_Edit;
+    delete buttonBox;
+
 }
 
 void ConfigureDialog::accept()

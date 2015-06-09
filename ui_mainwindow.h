@@ -34,12 +34,11 @@ public:
     QWidget *centralWidget;
     QGridLayout *gridLayout;
     DeviceList *devicelist;
-    QLabel *label_2;
     QTextEdit *textEdit_2;
     QHBoxLayout *horizontalLayout;
     QSpacerItem *horizontalSpacer;
     QPushButton *add_device;
-    QTextEdit *textEdit;
+    QLabel *label_2;
     QToolBar *mainToolBar;
     QStatusBar *statusBar;
 
@@ -47,7 +46,7 @@ public:
     {
         if (MainWindow->objectName().isEmpty())
             MainWindow->setObjectName(QStringLiteral("MainWindow"));
-        MainWindow->resize(737, 520);
+        MainWindow->resize(769, 469);
         QFont font;
         font.setPointSize(10);
         MainWindow->setFont(font);
@@ -78,24 +77,16 @@ public:
 
         gridLayout->addWidget(devicelist, 1, 0, 1, 2);
 
-        label_2 = new QLabel(centralWidget);
-        label_2->setObjectName(QStringLiteral("label_2"));
-        QFont font2;
-        font2.setPointSize(14);
-        label_2->setFont(font2);
-
-        gridLayout->addWidget(label_2, 3, 0, 1, 1);
-
         textEdit_2 = new QTextEdit(centralWidget);
         textEdit_2->setObjectName(QStringLiteral("textEdit_2"));
-        QSizePolicy sizePolicy(QSizePolicy::Expanding, QSizePolicy::Maximum);
+        QSizePolicy sizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
         sizePolicy.setHorizontalStretch(0);
         sizePolicy.setVerticalStretch(0);
         sizePolicy.setHeightForWidth(textEdit_2->sizePolicy().hasHeightForWidth());
         textEdit_2->setSizePolicy(sizePolicy);
-        textEdit_2->setMaximumSize(QSize(16777215, 75));
+        textEdit_2->setMaximumSize(QSize(16777215, 100));
 
-        gridLayout->addWidget(textEdit_2, 4, 0, 1, 2);
+        gridLayout->addWidget(textEdit_2, 3, 0, 1, 2);
 
         horizontalLayout = new QHBoxLayout();
         horizontalLayout->setSpacing(6);
@@ -112,13 +103,13 @@ public:
 
         gridLayout->addLayout(horizontalLayout, 0, 0, 1, 1);
 
-        textEdit = new QTextEdit(centralWidget);
-        textEdit->setObjectName(QStringLiteral("textEdit"));
-        sizePolicy.setHeightForWidth(textEdit->sizePolicy().hasHeightForWidth());
-        textEdit->setSizePolicy(sizePolicy);
-        textEdit->setMaximumSize(QSize(16777215, 50));
+        label_2 = new QLabel(centralWidget);
+        label_2->setObjectName(QStringLiteral("label_2"));
+        QFont font2;
+        font2.setPointSize(14);
+        label_2->setFont(font2);
 
-        gridLayout->addWidget(textEdit, 2, 0, 1, 2);
+        gridLayout->addWidget(label_2, 2, 0, 1, 1);
 
         MainWindow->setCentralWidget(centralWidget);
         mainToolBar = new QToolBar(MainWindow);
@@ -136,13 +127,8 @@ public:
     void retranslateUi(QMainWindow *MainWindow)
     {
         MainWindow->setWindowTitle(QApplication::translate("MainWindow", "Humidity Temprature Sensor", 0));
-        label_2->setText(QApplication::translate("MainWindow", "Activity", 0));
         add_device->setText(QApplication::translate("MainWindow", "Add Device", 0));
-        textEdit->setHtml(QApplication::translate("MainWindow", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-"<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
-"p, li { white-space: pre-wrap; }\n"
-"</style></head><body style=\" font-family:'Ubuntu'; font-size:10pt; font-weight:400; font-style:normal;\">\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:11pt;\">Humidity Temprature Sensor</span></p></body></html>", 0));
+        label_2->setText(QApplication::translate("MainWindow", "Activity", 0));
     } // retranslateUi
 
 };

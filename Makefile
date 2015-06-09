@@ -424,75 +424,38 @@ moc_mainwindow.cpp: /usr/include/qt5/QtWidgets/QMainWindow \
 		/usr/include/qt5/QtWidgets/qtabwidget.h \
 		/usr/include/qt5/QtGui/qicon.h \
 		/usr/include/qt5/QtCore/QObject \
-		/usr/include/qt5/QtNetwork/QAbstractSocket \
-		/usr/include/qt5/QtNetwork/qabstractsocket.h \
-		/usr/include/qt5/QtNetwork/QTcpSocket \
-		/usr/include/qt5/QtNetwork/qtcpsocket.h \
-		/usr/include/qt5/QtNetwork/QTcpServer \
-		/usr/include/qt5/QtNetwork/qtcpserver.h \
-		/usr/include/qt5/QtNetwork/qhostaddress.h \
-		/usr/include/qt5/QtNetwork/QHostAddress \
-		/usr/include/qt5/QtNetwork/QNetworkAddressEntry \
-		/usr/include/qt5/QtNetwork/qnetworkinterface.h \
-		/usr/include/qt5/QtCore/QProcess \
-		/usr/include/qt5/QtCore/qprocess.h \
-		/usr/include/qt5/QtWidgets/QDialog \
-		/usr/include/qt5/QtWidgets/qdialog.h \
 		/usr/include/qt5/QtCore/QDebug \
-		/usr/include/qt5/QtWidgets/QInputDialog \
-		/usr/include/qt5/QtWidgets/qinputdialog.h \
+		/usr/include/qt5/QtWidgets/qerrormessage.h \
+		/usr/include/qt5/QtWidgets/qdialog.h \
+		devicelist.h \
+		device.h \
+		/usr/include/qt5/QtNetwork/qtcpsocket.h \
+		/usr/include/qt5/QtNetwork/qabstractsocket.h \
+		/usr/include/qt5/QtWidgets/qpushbutton.h \
+		/usr/include/qt5/QtWidgets/qabstractbutton.h \
+		/usr/include/qt5/QtWidgets/QLineEdit \
 		/usr/include/qt5/QtWidgets/qlineedit.h \
 		/usr/include/qt5/QtWidgets/qframe.h \
 		/usr/include/qt5/QtGui/qtextcursor.h \
 		/usr/include/qt5/QtGui/qtextformat.h \
 		/usr/include/qt5/QtGui/qpen.h \
 		/usr/include/qt5/QtGui/qtextoption.h \
+		/usr/include/qt5/QtGui/QRegExpValidator \
+		/usr/include/qt5/QtGui/qvalidator.h \
+		/usr/include/qt5/QtCore/qregularexpression.h \
+		/usr/include/qt5/QtWidgets/QWidget \
+		/usr/include/qt5/QtWidgets/QLabel \
+		/usr/include/qt5/QtWidgets/qlabel.h \
+		/usr/include/qt5/QtWidgets/QDialog \
 		/usr/include/qt5/QtWidgets/QDialogButtonBox \
 		/usr/include/qt5/QtWidgets/qdialogbuttonbox.h \
-		/usr/include/qt5/QtWidgets/QVBoxLayout \
+		/usr/include/qt5/QtWidgets/QBoxLayout \
 		/usr/include/qt5/QtWidgets/qboxlayout.h \
 		/usr/include/qt5/QtWidgets/qlayout.h \
 		/usr/include/qt5/QtWidgets/qlayoutitem.h \
 		/usr/include/qt5/QtWidgets/qgridlayout.h \
-		/usr/include/qt5/QtWidgets/QLabel \
-		/usr/include/qt5/QtWidgets/qlabel.h \
-		/usr/include/qt5/QtGui/QRegExpValidator \
-		/usr/include/qt5/QtGui/qvalidator.h \
-		/usr/include/qt5/QtCore/qregularexpression.h \
-		/usr/include/qt5/QtCore/QFile \
-		/usr/include/qt5/QtCore/QDate \
-		/usr/include/qt5/QtCore/qdatetime.h \
-		/usr/include/qt5/QtCore/QTime \
-		/usr/include/qt5/QtWidgets/QPushButton \
-		/usr/include/qt5/QtWidgets/qpushbutton.h \
-		/usr/include/qt5/QtWidgets/qabstractbutton.h \
-		/usr/include/qt5/QtCore/QTimer \
-		/usr/include/qt5/QtCore/qtimer.h \
-		/usr/include/qt5/QtCore/qbasictimer.h \
-		/usr/include/qt5/QtWidgets/QMessageBox \
-		/usr/include/qt5/QtWidgets/qmessagebox.h \
-		/usr/include/qt5/QtWidgets/QFileDialog \
-		/usr/include/qt5/QtWidgets/qfiledialog.h \
-		/usr/include/qt5/QtCore/qdir.h \
-		/usr/include/qt5/QtCore/qfileinfo.h \
-		/usr/include/qt5/QtCore/QXmlStreamWriter \
-		/usr/include/qt5/QtCore/qxmlstream.h \
-		/usr/include/qt5/QtXml/QXmlAttributes \
-		/usr/include/qt5/QtXml/qxml.h \
-		/usr/include/qt5/QtXml/qtxmlglobal.h \
-		/usr/include/qt5/QtCore/QXmlStreamReader \
-		/usr/include/qt5/QtXml/QXmlDefaultHandler \
-		/usr/include/qt5/QtWidgets/QErrorMessage \
-		/usr/include/qt5/QtWidgets/qerrormessage.h \
-		/usr/include/qt5/QtXml/QDomElement \
 		/usr/include/qt5/QtXml/qdom.h \
-		/usr/include/qt5/QtCore/QThread \
-		/usr/include/qt5/QtCore/qthread.h \
-		devicelist.h \
-		device.h \
-		/usr/include/qt5/QtWidgets/QLineEdit \
-		/usr/include/qt5/QtWidgets/QWidget \
-		/usr/include/qt5/QtWidgets/QBoxLayout \
+		/usr/include/qt5/QtXml/qtxmlglobal.h \
 		/usr/include/qt5/QtWidgets/qtablewidget.h \
 		/usr/include/qt5/QtWidgets/qtableview.h \
 		/usr/include/qt5/QtWidgets/qabstractitemview.h \
@@ -1086,75 +1049,38 @@ main.o: main.cpp mainwindow.h \
 		/usr/include/qt5/QtWidgets/qtabwidget.h \
 		/usr/include/qt5/QtGui/qicon.h \
 		/usr/include/qt5/QtCore/QObject \
-		/usr/include/qt5/QtNetwork/QAbstractSocket \
-		/usr/include/qt5/QtNetwork/qabstractsocket.h \
-		/usr/include/qt5/QtNetwork/QTcpSocket \
-		/usr/include/qt5/QtNetwork/qtcpsocket.h \
-		/usr/include/qt5/QtNetwork/QTcpServer \
-		/usr/include/qt5/QtNetwork/qtcpserver.h \
-		/usr/include/qt5/QtNetwork/qhostaddress.h \
-		/usr/include/qt5/QtNetwork/QHostAddress \
-		/usr/include/qt5/QtNetwork/QNetworkAddressEntry \
-		/usr/include/qt5/QtNetwork/qnetworkinterface.h \
-		/usr/include/qt5/QtCore/QProcess \
-		/usr/include/qt5/QtCore/qprocess.h \
-		/usr/include/qt5/QtWidgets/QDialog \
-		/usr/include/qt5/QtWidgets/qdialog.h \
 		/usr/include/qt5/QtCore/QDebug \
-		/usr/include/qt5/QtWidgets/QInputDialog \
-		/usr/include/qt5/QtWidgets/qinputdialog.h \
+		/usr/include/qt5/QtWidgets/qerrormessage.h \
+		/usr/include/qt5/QtWidgets/qdialog.h \
+		devicelist.h \
+		device.h \
+		/usr/include/qt5/QtNetwork/qtcpsocket.h \
+		/usr/include/qt5/QtNetwork/qabstractsocket.h \
+		/usr/include/qt5/QtWidgets/qpushbutton.h \
+		/usr/include/qt5/QtWidgets/qabstractbutton.h \
+		/usr/include/qt5/QtWidgets/QLineEdit \
 		/usr/include/qt5/QtWidgets/qlineedit.h \
 		/usr/include/qt5/QtWidgets/qframe.h \
 		/usr/include/qt5/QtGui/qtextcursor.h \
 		/usr/include/qt5/QtGui/qtextformat.h \
 		/usr/include/qt5/QtGui/qpen.h \
 		/usr/include/qt5/QtGui/qtextoption.h \
+		/usr/include/qt5/QtGui/QRegExpValidator \
+		/usr/include/qt5/QtGui/qvalidator.h \
+		/usr/include/qt5/QtCore/qregularexpression.h \
+		/usr/include/qt5/QtWidgets/QWidget \
+		/usr/include/qt5/QtWidgets/QLabel \
+		/usr/include/qt5/QtWidgets/qlabel.h \
+		/usr/include/qt5/QtWidgets/QDialog \
 		/usr/include/qt5/QtWidgets/QDialogButtonBox \
 		/usr/include/qt5/QtWidgets/qdialogbuttonbox.h \
-		/usr/include/qt5/QtWidgets/QVBoxLayout \
+		/usr/include/qt5/QtWidgets/QBoxLayout \
 		/usr/include/qt5/QtWidgets/qboxlayout.h \
 		/usr/include/qt5/QtWidgets/qlayout.h \
 		/usr/include/qt5/QtWidgets/qlayoutitem.h \
 		/usr/include/qt5/QtWidgets/qgridlayout.h \
-		/usr/include/qt5/QtWidgets/QLabel \
-		/usr/include/qt5/QtWidgets/qlabel.h \
-		/usr/include/qt5/QtGui/QRegExpValidator \
-		/usr/include/qt5/QtGui/qvalidator.h \
-		/usr/include/qt5/QtCore/qregularexpression.h \
-		/usr/include/qt5/QtCore/QFile \
-		/usr/include/qt5/QtCore/QDate \
-		/usr/include/qt5/QtCore/qdatetime.h \
-		/usr/include/qt5/QtCore/QTime \
-		/usr/include/qt5/QtWidgets/QPushButton \
-		/usr/include/qt5/QtWidgets/qpushbutton.h \
-		/usr/include/qt5/QtWidgets/qabstractbutton.h \
-		/usr/include/qt5/QtCore/QTimer \
-		/usr/include/qt5/QtCore/qtimer.h \
-		/usr/include/qt5/QtCore/qbasictimer.h \
-		/usr/include/qt5/QtWidgets/QMessageBox \
-		/usr/include/qt5/QtWidgets/qmessagebox.h \
-		/usr/include/qt5/QtWidgets/QFileDialog \
-		/usr/include/qt5/QtWidgets/qfiledialog.h \
-		/usr/include/qt5/QtCore/qdir.h \
-		/usr/include/qt5/QtCore/qfileinfo.h \
-		/usr/include/qt5/QtCore/QXmlStreamWriter \
-		/usr/include/qt5/QtCore/qxmlstream.h \
-		/usr/include/qt5/QtXml/QXmlAttributes \
-		/usr/include/qt5/QtXml/qxml.h \
-		/usr/include/qt5/QtXml/qtxmlglobal.h \
-		/usr/include/qt5/QtCore/QXmlStreamReader \
-		/usr/include/qt5/QtXml/QXmlDefaultHandler \
-		/usr/include/qt5/QtWidgets/QErrorMessage \
-		/usr/include/qt5/QtWidgets/qerrormessage.h \
-		/usr/include/qt5/QtXml/QDomElement \
 		/usr/include/qt5/QtXml/qdom.h \
-		/usr/include/qt5/QtCore/QThread \
-		/usr/include/qt5/QtCore/qthread.h \
-		devicelist.h \
-		device.h \
-		/usr/include/qt5/QtWidgets/QLineEdit \
-		/usr/include/qt5/QtWidgets/QWidget \
-		/usr/include/qt5/QtWidgets/QBoxLayout \
+		/usr/include/qt5/QtXml/qtxmlglobal.h \
 		/usr/include/qt5/QtWidgets/qtablewidget.h \
 		/usr/include/qt5/QtWidgets/qtableview.h \
 		/usr/include/qt5/QtWidgets/qabstractitemview.h \
@@ -1291,75 +1217,38 @@ mainwindow.o: mainwindow.cpp mainwindow.h \
 		/usr/include/qt5/QtWidgets/qtabwidget.h \
 		/usr/include/qt5/QtGui/qicon.h \
 		/usr/include/qt5/QtCore/QObject \
-		/usr/include/qt5/QtNetwork/QAbstractSocket \
-		/usr/include/qt5/QtNetwork/qabstractsocket.h \
-		/usr/include/qt5/QtNetwork/QTcpSocket \
-		/usr/include/qt5/QtNetwork/qtcpsocket.h \
-		/usr/include/qt5/QtNetwork/QTcpServer \
-		/usr/include/qt5/QtNetwork/qtcpserver.h \
-		/usr/include/qt5/QtNetwork/qhostaddress.h \
-		/usr/include/qt5/QtNetwork/QHostAddress \
-		/usr/include/qt5/QtNetwork/QNetworkAddressEntry \
-		/usr/include/qt5/QtNetwork/qnetworkinterface.h \
-		/usr/include/qt5/QtCore/QProcess \
-		/usr/include/qt5/QtCore/qprocess.h \
-		/usr/include/qt5/QtWidgets/QDialog \
-		/usr/include/qt5/QtWidgets/qdialog.h \
 		/usr/include/qt5/QtCore/QDebug \
-		/usr/include/qt5/QtWidgets/QInputDialog \
-		/usr/include/qt5/QtWidgets/qinputdialog.h \
+		/usr/include/qt5/QtWidgets/qerrormessage.h \
+		/usr/include/qt5/QtWidgets/qdialog.h \
+		devicelist.h \
+		device.h \
+		/usr/include/qt5/QtNetwork/qtcpsocket.h \
+		/usr/include/qt5/QtNetwork/qabstractsocket.h \
+		/usr/include/qt5/QtWidgets/qpushbutton.h \
+		/usr/include/qt5/QtWidgets/qabstractbutton.h \
+		/usr/include/qt5/QtWidgets/QLineEdit \
 		/usr/include/qt5/QtWidgets/qlineedit.h \
 		/usr/include/qt5/QtWidgets/qframe.h \
 		/usr/include/qt5/QtGui/qtextcursor.h \
 		/usr/include/qt5/QtGui/qtextformat.h \
 		/usr/include/qt5/QtGui/qpen.h \
 		/usr/include/qt5/QtGui/qtextoption.h \
+		/usr/include/qt5/QtGui/QRegExpValidator \
+		/usr/include/qt5/QtGui/qvalidator.h \
+		/usr/include/qt5/QtCore/qregularexpression.h \
+		/usr/include/qt5/QtWidgets/QWidget \
+		/usr/include/qt5/QtWidgets/QLabel \
+		/usr/include/qt5/QtWidgets/qlabel.h \
+		/usr/include/qt5/QtWidgets/QDialog \
 		/usr/include/qt5/QtWidgets/QDialogButtonBox \
 		/usr/include/qt5/QtWidgets/qdialogbuttonbox.h \
-		/usr/include/qt5/QtWidgets/QVBoxLayout \
+		/usr/include/qt5/QtWidgets/QBoxLayout \
 		/usr/include/qt5/QtWidgets/qboxlayout.h \
 		/usr/include/qt5/QtWidgets/qlayout.h \
 		/usr/include/qt5/QtWidgets/qlayoutitem.h \
 		/usr/include/qt5/QtWidgets/qgridlayout.h \
-		/usr/include/qt5/QtWidgets/QLabel \
-		/usr/include/qt5/QtWidgets/qlabel.h \
-		/usr/include/qt5/QtGui/QRegExpValidator \
-		/usr/include/qt5/QtGui/qvalidator.h \
-		/usr/include/qt5/QtCore/qregularexpression.h \
-		/usr/include/qt5/QtCore/QFile \
-		/usr/include/qt5/QtCore/QDate \
-		/usr/include/qt5/QtCore/qdatetime.h \
-		/usr/include/qt5/QtCore/QTime \
-		/usr/include/qt5/QtWidgets/QPushButton \
-		/usr/include/qt5/QtWidgets/qpushbutton.h \
-		/usr/include/qt5/QtWidgets/qabstractbutton.h \
-		/usr/include/qt5/QtCore/QTimer \
-		/usr/include/qt5/QtCore/qtimer.h \
-		/usr/include/qt5/QtCore/qbasictimer.h \
-		/usr/include/qt5/QtWidgets/QMessageBox \
-		/usr/include/qt5/QtWidgets/qmessagebox.h \
-		/usr/include/qt5/QtWidgets/QFileDialog \
-		/usr/include/qt5/QtWidgets/qfiledialog.h \
-		/usr/include/qt5/QtCore/qdir.h \
-		/usr/include/qt5/QtCore/qfileinfo.h \
-		/usr/include/qt5/QtCore/QXmlStreamWriter \
-		/usr/include/qt5/QtCore/qxmlstream.h \
-		/usr/include/qt5/QtXml/QXmlAttributes \
-		/usr/include/qt5/QtXml/qxml.h \
-		/usr/include/qt5/QtXml/qtxmlglobal.h \
-		/usr/include/qt5/QtCore/QXmlStreamReader \
-		/usr/include/qt5/QtXml/QXmlDefaultHandler \
-		/usr/include/qt5/QtWidgets/QErrorMessage \
-		/usr/include/qt5/QtWidgets/qerrormessage.h \
-		/usr/include/qt5/QtXml/QDomElement \
 		/usr/include/qt5/QtXml/qdom.h \
-		/usr/include/qt5/QtCore/QThread \
-		/usr/include/qt5/QtCore/qthread.h \
-		devicelist.h \
-		device.h \
-		/usr/include/qt5/QtWidgets/QLineEdit \
-		/usr/include/qt5/QtWidgets/QWidget \
-		/usr/include/qt5/QtWidgets/QBoxLayout \
+		/usr/include/qt5/QtXml/qtxmlglobal.h \
 		/usr/include/qt5/QtWidgets/qtablewidget.h \
 		/usr/include/qt5/QtWidgets/qtableview.h \
 		/usr/include/qt5/QtWidgets/qabstractitemview.h \
@@ -1375,31 +1264,7 @@ mainwindow.o: mainwindow.cpp mainwindow.h \
 		/usr/include/qt5/QtWidgets/qtabbar.h \
 		/usr/include/qt5/QtWidgets/qrubberband.h \
 		ui_mainwindow.h \
-		/usr/include/qt5/QtCore/QVariant \
-		/usr/include/qt5/QtWidgets/QAction \
-		/usr/include/qt5/QtWidgets/qaction.h \
-		/usr/include/qt5/QtWidgets/qactiongroup.h \
-		/usr/include/qt5/QtWidgets/QApplication \
-		/usr/include/qt5/QtWidgets/qapplication.h \
-		/usr/include/qt5/QtCore/qcoreapplication.h \
-		/usr/include/qt5/QtCore/qeventloop.h \
-		/usr/include/qt5/QtWidgets/qdesktopwidget.h \
-		/usr/include/qt5/QtGui/qguiapplication.h \
-		/usr/include/qt5/QtGui/qinputmethod.h \
-		/usr/include/qt5/QtWidgets/QButtonGroup \
-		/usr/include/qt5/QtWidgets/qbuttongroup.h \
-		/usr/include/qt5/QtWidgets/QGridLayout \
-		/usr/include/qt5/QtWidgets/QHBoxLayout \
-		/usr/include/qt5/QtWidgets/QHeaderView \
-		/usr/include/qt5/QtWidgets/qheaderview.h \
-		/usr/include/qt5/QtWidgets/QSpacerItem \
-		/usr/include/qt5/QtWidgets/QStatusBar \
-		/usr/include/qt5/QtWidgets/qstatusbar.h \
-		/usr/include/qt5/QtWidgets/QTextEdit \
-		/usr/include/qt5/QtWidgets/qtextedit.h \
-		/usr/include/qt5/QtGui/qtextdocument.h \
-		/usr/include/qt5/QtWidgets/QToolBar \
-		/usr/include/qt5/QtWidgets/qtoolbar.h
+		/usr/include/qt5/QtNetwork/QAbstractSocket
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o mainwindow.o mainwindow.cpp
 
 device.o: device.cpp device.h \
@@ -1537,7 +1402,9 @@ device.o: device.cpp device.h \
 		/usr/include/qt5/QtWidgets/qlayout.h \
 		/usr/include/qt5/QtWidgets/qlayoutitem.h \
 		/usr/include/qt5/QtWidgets/qgridlayout.h \
-		/usr/include/qt5/QtNetwork/qhostaddress.h
+		/usr/include/qt5/QtNetwork/qhostaddress.h \
+		/usr/include/qt5/QtWidgets/qmessagebox.h \
+		/usr/include/qt5/QtWidgets/qerrormessage.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o device.o device.cpp
 
 devicelist.o: devicelist.cpp devicelist.h \
@@ -1694,7 +1561,9 @@ devicelist.o: devicelist.cpp devicelist.h \
 		/usr/include/qt5/QtWidgets/qtabwidget.h \
 		/usr/include/qt5/QtWidgets/qrubberband.h \
 		/usr/include/qt5/QtWidgets/qmessagebox.h \
-		/usr/include/qt5/QtWidgets/qheaderview.h
+		/usr/include/qt5/QtWidgets/qheaderview.h \
+		/usr/include/qt5/QtWidgets/qerrormessage.h \
+		/usr/include/qt5/QtCore/qdatetime.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o devicelist.o devicelist.cpp
 
 moc_mainwindow.o: moc_mainwindow.cpp 

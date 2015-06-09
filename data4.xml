@@ -1,4 +1,4 @@
 <Devices>
- <Device Subnet="" IP="127.0.0.1" Location="pune" State="0" id="0" Temp="0" Humidity="0"/>
- <Device Subnet="" IP="127.0.0.1" Location="pune" State="0" id="1" Temp="0" Humidity="0"/>
+ <Device Humidity="0" id="0" State="0" Location="" Temp="0" IP="127.0.0.1" Subnet=""/>
+ <Device Humidity="0" id="2" State="0" Location="" Temp="0" IP="192.168.1.105" Subnet=""/>
 </Devices>

@@ -52,6 +52,9 @@ class DeviceList: public QTableWidget
 
     Q_OBJECT
 private:
+    int colNum_id;
+    int colNum_ip;
+    int colNum_location;
     int colNum_state;
     int colNum_temp;
     int colNum_humidity;
@@ -64,10 +67,10 @@ private:
     QString humidity;
     QString state;
     QString status;
-    QString earlierState;
     QString activity_text;
 
 public:
+    ~DeviceList();
     QList <int> valid_device;
     DeviceList(QWidget *parent);
     void show(void);
@@ -77,17 +80,11 @@ public:
     void xmlDomDelete(int device_id);
     void xmlDomUpdate(int device_id);
     int xmlDomReader();
-    int retriveDeviceInfo(QDomElement device);
-    void deviceListUpdate(QString);
-    void deviceListDelete(QString);
+    void retriveDeviceInfo(QDomElement device);
     void showDeviceList();
     void xmlDomUpdateStatus(QString,QVector<Device>::iterator);
     void updateDevice(QString);
-    //void getStatus();
     RegisterDialog *registerDialog;
-
-    //QVector<QString> v;
-    //QVector<QString>::iterator iterator;
 
     QObject *parent;
     QString newIpAddress;
@@ -103,7 +100,10 @@ private slots:
     void updateDevice(int device_id);
     void on_addDevice_accept();
     void data_available(int device_id, QByteArray data);
-    void on_statusAll_clicked(int);
+    void on_header_clicked(int);
+
+signals:
+    void activity(QString );
 };
 
 
