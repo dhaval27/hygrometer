@@ -8,15 +8,13 @@
 DeviceList::DeviceList(QWidget *parent)
 {
     for( int i = 0; i < MAX_DEVICE; i++) {
-        this->device[i].initDevice(this,-1);
+        this->device[i].initDevice(this,-1);    ///< initialising all the devices
         this->device[i].socket=NULL;
     }
-
 }
 
 DeviceList::~DeviceList()
-{
-}
+{}
 
 void DeviceList::show(void)
 {
@@ -50,20 +48,18 @@ void DeviceList::show(void)
     QFont *font = new QFont("Helvetica",10,8,false);
     font->setBold(true);
     QHeaderView *header= this->horizontalHeader();
-    header->setSectionResizeMode(QHeaderView::Stretch);
+    header->setSectionResizeMode(QHeaderView::Stretch); ///< resizes headers to the window size
 
-    header->setFont(*font);
+    header->setFont(*font); ///< setting header font
 
+    ///< setting tooltips for "STATUS" & "REMOVE" headers
     this->horizontalHeaderItem(colNum_getStatus)->setToolTip("Click to Get All Devices Status");
     this->horizontalHeaderItem(colNum_unRegister)->setToolTip("Click to Remove All Devices");
 
-    this->setEditTriggers(QAbstractItemView::NoEditTriggers);
-
+    this->setEditTriggers(QAbstractItemView::NoEditTriggers);   ///< making all cell only readable
 
     connect(header,SIGNAL(sectionClicked(int)),this,SLOT(on_header_clicked(int)));
-    deviceCount = this->xmlDomReader();
-
-    //this->showDeviceList();
+    deviceCount = this->xmlDomReader(); ///< reading the devices from the file which are already present
 }
 
 void DeviceList::AddDevice(Device *dev,int rowCount)
@@ -124,6 +120,7 @@ int DeviceList::xmlDomReader()
     QDomElement root = document.firstChildElement();
     QDomNode n = root.firstChild();
 
+    ///< traversing in .xml document node by node
     while(!n.isNull())
     {
         if(n.isElement())
@@ -158,9 +155,10 @@ void DeviceList::retriveDeviceInfo(QDomElement device)
     connect(&this->device[id],SIGNAL(delete_me(int)),this,SLOT(deleteDevice(int)));
     connect(&this->device[id],SIGNAL(data_available(int,QByteArray)),this,SLOT(data_available(int,QByteArray)));
 
-
     last_row = this->valid_device.size();
-    this->valid_device.push_back(id);
+    this->valid_device.push_back(id);   ///< adding device in List<>
+
+    ///< defining the attributes of the device
     this->device[id].dev_id = id;
     this->device[id].setIP(device.attribute("IP"));
     this->device[id].setState(device.attribute("State"));
@@ -173,7 +171,7 @@ void DeviceList::retriveDeviceInfo(QDomElement device)
     this->device[id].setTempMax(device.attribute("Max_Temp"));
     this->device[id].setTempMin(device.attribute("Min_Temp"));
 #endif
-    AddDevice(this->device+id,last_row);
+    AddDevice(this->device+id,last_row);    ///< adding the device in GUI
 }
 
 void DeviceList::xmlDomUpdate(int device_id)
@@ -202,7 +200,7 @@ void DeviceList::xmlDomUpdate(int device_id)
     }
 
     QDomElement root;
-    if(exist)
+    if(exist)   ///< if file was already present
     {
         //if("Devices"==document.documentElement().tagName())
         {
@@ -210,10 +208,10 @@ void DeviceList::xmlDomUpdate(int device_id)
             root = document.firstChildElement();
         }
     }
-    else
+    else    ///< file does not exist previously
     {
         qDebug()<<"file doesn't exist ";
-        root = document.createElement("Devices");
+        root = document.createElement("Devices");   ///< adding root to the document
         document.appendChild(root);
 
         QDomElement newElement= document.createElement("Device");
@@ -226,7 +224,7 @@ void DeviceList::xmlDomUpdate(int device_id)
         newElement.setAttribute("Temp","0");
         newElement.setAttribute("Humidity","0");
 #endif
-        root.appendChild(newElement);
+        root.appendChild(newElement);   ///< creating the child element of root
 
             QTextStream stream(&file);
             stream<<document.toString();
@@ -243,10 +241,8 @@ void DeviceList::xmlDomUpdate(int device_id)
     QDomNode parentNode = node.parentNode();
     QDomElement newElement= document.createElement("Device");
 
-    /*****************if only Parent node is present*************/
-    if(node.isNull())
+    if(node.isNull())   ///< if only Parent node is present with no child
     {
-
         qDebug()<<"root is null";
         newElement.setAttribute("id",device_id);
         newElement.setAttribute("IP",registerDialog->ip_Edit->text());
@@ -291,7 +287,7 @@ void DeviceList::xmlDomUpdate(int device_id)
         {
             ele = node.toElement();
 
-            if( ( ele.attribute("id").toInt(&ok,10) ) == device_id)
+            if( ( ele.attribute("id").toInt(&ok,10) ) == device_id) ///< checking that node is already present or not
             {
                 qDebug()<<"device already present";
                 devicePresent=true;
@@ -305,7 +301,7 @@ void DeviceList::xmlDomUpdate(int device_id)
 
     qDebug()<<"N NODE=    "<<node.nodeName()<<"   P NODE="<<parentNode.nodeName();
 
-    if(!devicePresent)
+    if(!devicePresent)  ///< if device not present already
     {
         newElement.setAttribute("id",device_id);
         newElement.setAttribute("IP",registerDialog->ip_Edit->text());
@@ -319,7 +315,7 @@ void DeviceList::xmlDomUpdate(int device_id)
         parentNode.insertAfter(newElement,parentNode.lastChildElement());
         qDebug()<<"newElement inserted";
     }
-    else
+    else    ///< if device is present already(when settings clicked & got the signal)
     {
         qDebug()<<"in else";
         newElement.setAttribute("id",device_id);
@@ -476,9 +472,6 @@ void DeviceList::on_addDevice_accept()
 
     if( id < MAX_DEVICE )
     {
-        connect(&this->device[id],SIGNAL(delete_me(int)),this,SLOT(deleteDevice(int)));
-        connect(&this->device[id],SIGNAL(data_available(int,QByteArray)),this,SLOT(data_available(int,QByteArray)));
-        connect(&this->device[id],SIGNAL(update_me(int)),this,SLOT(updateDevice(int)));
 
         valid_device.push_back(id);
         qDebug()<<"valid size="<<valid_device.size();
@@ -487,9 +480,12 @@ void DeviceList::on_addDevice_accept()
         this->device[id].dev_ip         = registerDialog->ip_Edit->text();
         this->device[id].dev_subnet     = registerDialog->subnet_Edit->text();
         this->device[id].dev_location   = registerDialog->location_Edit->text();
+
+        connect(&this->device[id],SIGNAL(delete_me(int)),this,SLOT(deleteDevice(int)));
         connect(&this->device[id],SIGNAL(data_available(int,QByteArray)),this,SLOT(data_available(int,QByteArray)));
         connect(&this->device[id],SIGNAL(update_me(int)),this,SLOT(updateDevice(int)));
-        xmlDomUpdate(id);
+
+        xmlDomUpdate(id);   ///< updating in xml file
         AddDevice(&this->device[id],(this->rowCount()));
         //xmlDomReader();
     }
@@ -499,6 +495,7 @@ void DeviceList::deleteDevice(int device_id)
 {
     qDebug()<<"in deleteDevice"<<device_id;
 
+    ///< disconnecting signals
     disconnect(&this->device[device_id],SIGNAL(delete_me(int)),this,SLOT(deleteDevice(int)));
     disconnect(&this->device[device_id],SIGNAL(data_available(int,QByteArray)),this,SLOT(data_available(int,QByteArray)));
     disconnect(&this->device[device_id],SIGNAL(update_me(int)),this,SLOT(updateDevice(int)));
@@ -512,17 +509,17 @@ void DeviceList::deleteDevice(int device_id)
     {
         qDebug()<<"dev_id="<<this->device[device_id].dev_id;
 
-        QList<int>::iterator position = std::find(this->valid_device.begin(), this->valid_device.end(), device_id);
+        QList<int>::iterator position = std::find(this->valid_device.begin(), this->valid_device.end(), device_id); ///< finding device position in List
 
-        qDebug()<<std::distance(this->valid_device.begin(),position);
-        this->removeRow(std::distance(this->valid_device.begin(),position));
+        qDebug()<<std::distance(this->valid_device.begin(),position);   ///< calculating distance in List
+        this->removeRow(std::distance(this->valid_device.begin(),position));    ///< removing from GUI
         //this->device[device_id].dev_id = -1;
-        this->device[device_id].dev_id= -1;
+        this->device[device_id].dev_id= -1; ///< making device ID to -1.
 
-        this->valid_device.erase(position);
+        this->valid_device.erase(position); ///< removing device from the List
         qDebug()<<"size="<<valid_device.size();
 
-        xmlDomDelete(device_id);
+        xmlDomDelete(device_id);    ///< removing device from .xml document
     }
     else
     {
@@ -535,13 +532,13 @@ void DeviceList::deleteDevice(int device_id)
 
 void DeviceList::updateDevice(int device_id)
 {
-    qDebug()<<"IN slot";
+    ///< when msg is recevied from host device
     this->device[device_id].dev_ip      = this->device[device_id].newIpAddress;
     this->device[device_id].dev_subnet  = this->device[device_id].newSubnet;
     xmlDomUpdate(device_id);
 }
 
-
+///< when msg is recevied from host device
 void DeviceList::data_available(int device_id,QByteArray data)
 {
     qDebug()<<"data in getStatus="<<data;
@@ -556,7 +553,7 @@ void DeviceList::data_available(int device_id,QByteArray data)
     qDebug()<<"state="<<state;
 
     //qDebug()<<host_address;
-    if((state != (this->device[device_id].dev_earlierState)))
+    if((state != (this->device[device_id].dev_earlierState)))   ///< checking if device's State is changed or not
     {
         activity_text= "";
         qDebug()<<"activity_text="<<activity_text;
@@ -565,7 +562,7 @@ void DeviceList::data_available(int device_id,QByteArray data)
         activity_text.append(", ");
         activity_text.append(QDate::currentDate().toString("dd MMM"));
         activity_text.append("\n");
-        emit activity(activity_text);
+        emit activity(activity_text);   ///< signal emitted to update in GUI activity text
     }
 
 #ifdef HYGROMETER
@@ -613,7 +610,7 @@ void DeviceList::data_available(int device_id,QByteArray data)
 void DeviceList::on_header_clicked(int index)
 {
     qDebug()<<"on_header "<<index<<"clicked";
-    if(index==colNum_getStatus)
+    if(index==colNum_getStatus) ///< checking if "STATUS" header is clicked or not
     {
         for(int i=0;i<MAX_DEVICE; i++)
         {
@@ -631,7 +628,7 @@ void DeviceList::on_header_clicked(int index)
             }
         }
     }
-    if(index==colNum_unRegister)
+    if(index==colNum_unRegister)    ///< checking if "REMOVE" header is clicked or not
     {
         QMessageBox::StandardButton msgBox= QMessageBox::question(NULL,"Warning !","Do you really want to delete ALL devices?",QMessageBox::Yes|QMessageBox::No);
         if(msgBox==QMessageBox::Yes)
@@ -728,5 +725,3 @@ RegisterDialog::~RegisterDialog()
     delete location_Label;
     delete buttonBox;
 }
-
-

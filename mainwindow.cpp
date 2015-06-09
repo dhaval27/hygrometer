@@ -2,14 +2,7 @@
 #include "ui_mainwindow.h"
 #include <QAbstractSocket>
 #include <iostream>
-
-
-
-//QString file_name="C:\\Users\\dhaval\\Desktop\\data4.xml";
-
-//bool flag=true;
-bool flag_update=true;
-int deviceIndex=0;
+#include "devicelist.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -18,6 +11,11 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     ui->devicelist->show();
+#ifdef HYGROMETER
+    this->setWindowTitle("Humidity Temperature Sensor");
+#else
+    this->setWindowTitle("Device Status");
+#endif
 
     connect(ui->devicelist,SIGNAL(activity(QString)),this,SLOT(activity(QString)));
 }

@@ -1,4 +1,4 @@
 <Devices>
- <Device Humidity="0" id="0" State="0" Location="" Temp="0" IP="127.0.0.1" Subnet=""/>
- <Device Humidity="0" id="2" State="0" Location="" Temp="0" IP="192.168.1.105" Subnet=""/>
+ <Device id="0" Location="" IP="127.0.0.1" Subnet="" Temp="0" Humidity="0" State="0"/>
+ <Device id="2" Location="" IP="192.168.1.105" Subnet="" Temp="0" Humidity="0" State="0"/>
 </Devices>

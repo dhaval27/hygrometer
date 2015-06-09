@@ -7,9 +7,7 @@
 #include "devicelist.h"
 
 Device::~Device()
-{
-
-}
+{}
 
 void Device::initDevice(QObject *parent, int device_id)
 {
@@ -21,16 +19,19 @@ void Device::initDevice(QObject *parent, int device_id)
 
     connect(btn_getStatus,SIGNAL(clicked()),this,SLOT(on_btn_getStatus_clicked()));
     connect(btn_settings,SIGNAL(clicked()),this,SLOT(on_btn_settings_clicked()));
-    connect(btn_unRegister,SIGNAL(clicked()),this,SLOT(on_btn_unRegister_clicked()));
+    connect(btn_unRegister,SIGNAL(clicked()),this,SLOT(on_btn_remove_clicked()));
 #ifdef HYGROMETER
     btn_configure= new QPushButton("Configure",NULL);
     connect(btn_configure,SIGNAL(clicked()),this,SLOT(on_btn_configure_clicked()));
 #endif
 }
 
+/***********************************************
+ "doConnect" is a fun(), where socket is created
+ & connection is made with perticular host device
+ **********************************************/
 bool Device::doConnect(QString ipAddress)
 {
-
     bool ret = false;
 
     if(socket) {
@@ -42,17 +43,7 @@ bool Device::doConnect(QString ipAddress)
         } else if(socket->state() == QAbstractSocket::ConnectingState ) {
             //ui->textEdit->setPlainText("socket state Connecting\n");
         } else if(socket->state() == QAbstractSocket::ConnectedState ) {
-            return true;
-#if 0
-            if(ipAddress == (socket->peerAddress().toString()))
-                return true;
-            else
-            {
-                socket->close();
-                socket = NULL;
-                //return true;
-            }
-#endif
+            return true;    ///< if already connected it will return from here only
         } else if(socket->state() == QAbstractSocket::BoundState  ) {
             //ui->textEdit->setPlainText("socket state BoundState \n");
         } else if(socket->state() == QAbstractSocket::ClosingState  ) {
@@ -61,9 +52,9 @@ bool Device::doConnect(QString ipAddress)
     }
     qDebug()<<"in device doConnect..."<<ipAddress;
     socket = new QTcpSocket();
-    socket->connectToHost(ipAddress, 5099);
+    socket->connectToHost(ipAddress, 5099); ///< connecting with the host device with this "ipAddress"
 
-    ret = socket->waitForConnected(5000);
+    ret = socket->waitForConnected(5000);   ///< waiting for 5000 milliseconds for device to connect
     if(ret == false)
       return false;
 
@@ -75,6 +66,10 @@ bool Device::doConnect(QString ipAddress)
 
 }
 
+
+/******************************************
+ ***************   SLOTS   ****************
+ *****************************************/
 void Device::readData()
 {
     data= socket->readAll();
@@ -84,13 +79,11 @@ void Device::readData()
     qDebug()<<"data="<<data;
     if(data.contains("###STATUS"))
     {
-        emit data_available(this->dev_id,data);
-        //getStatus(host_address);
+        emit data_available(this->dev_id,data); ///< signal is emmitted when "###STATUS" is received
     }
     if(data.contains("#IPSUBNET CHANGED"))
     {
-        qDebug()<<"IPSUBNET";
-        emit update_me(this->dev_id);
+        emit update_me(this->dev_id);   ///< signal is emmitted when "#IPSUBNET CHANGED" is received
     }
 }
 
@@ -100,7 +93,6 @@ void Device::closeConnection()
     socket = NULL;
 }
 
-
 void Device::on_btn_getStatus_clicked()
 {
     qDebug()<<"btn_getStatus_clicked";
@@ -108,19 +100,14 @@ void Device::on_btn_getStatus_clicked()
 
     //this->dev_ip= "127.0.0.1";
     qDebug()<<this->dev_ip;
-    ret = doConnect(this->dev_ip);
-    if(ret==false)
+    ret = doConnect(this->dev_ip);  ///< call doConnect and passing device's IP
+    if(ret==false)  ///< check for device is present in network or not
     {
         QErrorMessage *err_msg= new QErrorMessage();
         err_msg->setWindowTitle("ERROR!");
         err_msg->showMessage("SORRY! Device not found ");
         return;
     }
-#if 0
-    thread= new MyThread(ipAddress,this);
-    connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
-    thread->start();
-#endif
 }
 
 void Device::on_btn_settings_clicked()
@@ -130,7 +117,7 @@ void Device::on_btn_settings_clicked()
 
     //emit update_me(this->dev_id);
     netInfo = new IPSubnetDialogue(NULL);
-    ret =  netInfo->exec();
+    ret =  netInfo->exec(); ///< show "IPSubnetDialogue" dialogbox to give inputs
 
     if(ret == QDialog::Accepted)
     {
@@ -139,6 +126,7 @@ void Device::on_btn_settings_clicked()
 
         if(socket!=NULL)
         {
+            socket->write("SET YOUR\n");
             socket->write("#IP#");
             socket->write(this->newIpAddress.toStdString().c_str());
             socket->write("\n");
@@ -146,27 +134,7 @@ void Device::on_btn_settings_clicked()
             socket->write(this->newSubnet.toStdString().c_str());
             socket->write("\n");
         }
-//        this->device[device_id].dev_ip      = netInfo->get_ipaddress();
-//        this->device[device_id].dev_subnet  = netInfo->get_subnet();
-//        xmlDomUpdate(device_id);
     }
-#if 0
-    if(deviceList->newIpAddress == "") {
-        ui->textEdit->setPlainText("Please fill IP address of device. \"look at lcd of device\" ");
-        return;
-    }
-    ret = doConnect(ipAddress);
-    if (ret == false) {
-        ui->textEdit->setPlainText("Device not found in network.\"Please check your network connection\" ");
-        return;
-    }
-    else
-    {
-        ui->textEdit->setPlainText("Device is present in Network");
-    }
-
-
-#endif
 }
 
 void Device::on_btn_configure_clicked()
@@ -178,16 +146,15 @@ void Device::on_btn_configure_clicked()
     ret =  config->exec();
 
     if(ret == QDialog::Accepted){
-        qDebug()<<"dialog accepted";
         this->dev_temp_max= config->get_max_temp();
         this->dev_temp_min= config->get_min_temp();
         this->dev_humidity_max= config->get_max_humidity();
         this->dev_humidity_min= config->get_min_humidity();
         //this->xmlDomUpdate(dev_id);
-        //this->deviceListUpdate(dev_id);
 
         if(socket!=NULL)
         {
+            socket->write("#SET YOUR DEVICE TO\n");
             socket->write("#MAX_TEMP#");
             socket->write(config->get_max_temp().toStdString().c_str());
             socket->write("\n");
@@ -203,10 +170,11 @@ void Device::on_btn_configure_clicked()
         }
     }
 }
-void Device::on_btn_unRegister_clicked()
+
+void Device::on_btn_remove_clicked()
 {
 
-    qDebug()<<"btn_unRegister_clicked";
+    qDebug()<<"btn_remove_clicked";
     qDebug()<<"id"<<this->dev_id;
 
     QMessageBox::StandardButton msgBox= QMessageBox::question(NULL,"Warning !","Do you really want to delete this device?",QMessageBox::Yes|QMessageBox::No);
@@ -220,9 +188,9 @@ void Device::on_btn_unRegister_clicked()
     }
 }
 
-
-
-
+/*************************************************
+ ***************    DIALOG BOXES  ****************
+ ************************************************/
 
 IPSubnetDialogue::IPSubnetDialogue(QWidget *parent): QDialog(parent)
 {

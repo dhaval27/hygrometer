@@ -20,9 +20,7 @@
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QSpacerItem>
-#include <QtWidgets/QStatusBar>
 #include <QtWidgets/QTextEdit>
-#include <QtWidgets/QToolBar>
 #include <QtWidgets/QWidget>
 #include "devicelist.h"
 
@@ -39,8 +37,6 @@ public:
     QSpacerItem *horizontalSpacer;
     QPushButton *add_device;
     QLabel *label_2;
-    QToolBar *mainToolBar;
-    QStatusBar *statusBar;
 
     void setupUi(QMainWindow *MainWindow)
     {
@@ -97,6 +93,7 @@ public:
 
         add_device = new QPushButton(centralWidget);
         add_device->setObjectName(QStringLiteral("add_device"));
+        add_device->setToolTipDuration(1);
 
         horizontalLayout->addWidget(add_device);
 
@@ -112,12 +109,6 @@ public:
         gridLayout->addWidget(label_2, 2, 0, 1, 1);
 
         MainWindow->setCentralWidget(centralWidget);
-        mainToolBar = new QToolBar(MainWindow);
-        mainToolBar->setObjectName(QStringLiteral("mainToolBar"));
-        MainWindow->addToolBar(Qt::TopToolBarArea, mainToolBar);
-        statusBar = new QStatusBar(MainWindow);
-        statusBar->setObjectName(QStringLiteral("statusBar"));
-        MainWindow->setStatusBar(statusBar);
 
         retranslateUi(MainWindow);
 
@@ -126,7 +117,10 @@ public:
 
     void retranslateUi(QMainWindow *MainWindow)
     {
-        MainWindow->setWindowTitle(QApplication::translate("MainWindow", "Humidity Temprature Sensor", 0));
+        MainWindow->setWindowTitle(QString());
+#ifndef QT_NO_TOOLTIP
+        add_device->setToolTip(QApplication::translate("MainWindow", "<html><head/><body><p>Click to Add New Device</p></body></html>", 0));
+#endif // QT_NO_TOOLTIP
         add_device->setText(QApplication::translate("MainWindow", "Add Device", 0));
         label_2->setText(QApplication::translate("MainWindow", "Activity", 0));
     } // retranslateUi

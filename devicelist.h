@@ -9,20 +9,16 @@
 
 #define HYGROMETER
 
+/***************************************************
+ "RegisterDialog" is a class of a Dialogbox that
+   will open while "Add Device" button clicked
+***************************************************/
+
 class RegisterDialog: public QDialog
 {
     Q_OBJECT
 public:
     explicit RegisterDialog(QWidget *parent);
-    void registerInFile();
-    void qXmlReader();
-    void xmlDomWritter();
-    //void xmlDomReader();
-    //void retriveElements(QDomElement,QString);
-    //void xmlDomUpdate();
-
-    int totalDevice;
-
     ~RegisterDialog();
 
 private slots:
@@ -47,9 +43,14 @@ public:
     QDialogButtonBox *buttonBox;
 };
 
+/***************************************************
+ "DeviceList" is a class of a QTableWidget, which is
+  haiving all the devices present & where devices are
+  to be displayed.("ui" is a parent for this class)
+***************************************************/
+
 class DeviceList: public QTableWidget
 {
-
     Q_OBJECT
 private:
     int colNum_id;

@@ -26,10 +26,14 @@ private:
 
 };
 
+/***************************************************
+ "IPSubnetDialogue" is a class of a Dialogbox that
+   will open while "Settings" button clicked
+***************************************************/
+
 class IPSubnetDialogue :public QDialog
 {
     Q_OBJECT
-
 public:
      explicit IPSubnetDialogue(QWidget *parent);
     ~IPSubnetDialogue();
@@ -52,6 +56,11 @@ private:
 
     QDialogButtonBox *buttonBox;
 };
+
+/***************************************************
+ "ConfigureDialog" is a class of a Dialogbox that
+   will open while "Configure" button clicked
+***************************************************/
 
 class ConfigureDialog :public QDialog
 {
@@ -87,6 +96,11 @@ private:
 
     QDialogButtonBox *buttonBox;
 };
+
+/***************************************************
+ "Device" is a class, which is having device related
+        buttons & all the information of device
+***************************************************/
 
 class Device:public QObject
 {
@@ -163,7 +177,7 @@ private:
     ConfigureDialog *config;
 
 private slots:
-    void on_btn_unRegister_clicked();
+    void on_btn_remove_clicked();
     void on_btn_getStatus_clicked();
     void on_btn_settings_clicked();
     void on_btn_configure_clicked();
